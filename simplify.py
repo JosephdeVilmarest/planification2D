@@ -15,7 +15,7 @@ def angle_normal(polygone, epsilon):
               epsilon*(polygone[(i+1)%n][1]-polygone[i][1])) 
                             for i in range(n)]
 
-def sum_Minkovski(polygone, objet):
+def sum_Minkowski(polygone, objet):
     n=len(polygone)
     m=len(objet)
     #le polygone est convexe donc ap est ordonnée, à une rotation près
@@ -30,14 +30,17 @@ def sum_Minkovski(polygone, objet):
                         polygone[i][1]-(objet[1][1]-objet[0][1]))]
     P=S[0]  #dernier point utilisé
     a=ao[0] #dernier angle utilisé
+    flag=True
     while j!=0 or i!=i0:
-        if ((ap[i]>=a and ao[j]>ap[i]) or (ap[i]>=a and ao[j]<a)
-            or (ao[i]<a and ao[i]>ap[i])):
+        if (flag and ((ap[i]>=a and ao[j]>ap[i]) or (ap[i]>=a and ao[j]<a)
+            or (ao[j]<a and ao[j]>ap[i]))):
             P=(P[0]+(polygone[(i+1)%n][0]-polygone[i][0]),
                P[1]+(polygone[(i+1)%n][1]-polygone[i][1]))
             S.append(P)
             a=ap[i]
             i=(i+1)%n
+            if i==i0:
+                flag=False
         else:
             P=(P[0]-(objet[(j+1)%m][0]-objet[j][0]),
                P[1]-(objet[(j+1)%m][1]-objet[j][1]))
@@ -55,4 +58,4 @@ def simplify(lobstacles, objet):
         lconvexe.extend(get_convex(polygone))
     #la liste des obstacles est maintenant la liste des polygones convexes
 
-    return [sum_Minkovski(polygone,objet) for polygone in lconvexe] 
+    return [sum_Minkowski(polygone,objet) for polygone in lconvexe] 
