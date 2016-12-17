@@ -5,9 +5,9 @@ Le but de ce projet est de planifier le mouvement d'un objet polygonal dans le p
 
 Je (Joseph) pense qu'il faudrait effectuer les étapes suivantes:
 
--on demande à l'utilisateur de définir les obstacles, puis l'objet à déplacer
+-on demande à l'utilisateur de définir les obstacles, puis l'objet à déplacer, la position de départ et d'arrivée
 
--on calcule le problème équivalent consistant à déplacer un point avec des obstacles constitués des sommes de Minkovski -> fonction simplify.py
+-on calcule le problème équivalent consistant à déplacer un point avec des obstacles constitués des sommes de Minkovski
 
 -graphe de visibilité
 
@@ -15,4 +15,4 @@ Je (Joseph) pense qu'il faudrait effectuer les étapes suivantes:
 
 -diagramme de Voronoi
 
--on repasse du ptoblème simplifié au problème de départ
+-on repasse du problème simplifié au problème de départ
