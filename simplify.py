@@ -1,3 +1,5 @@
+from math import sqrt, atan2
+
 def get_convex(polygone):
     #on renvoie une liste de polygones convexes dont 
     #l'union (disjointe) est égale au polygone de départ
@@ -9,10 +11,9 @@ def angle_normal(polygone, epsilon):
     #epsilon=1 correspond aux obstacles: normales extérieures
     #epsilon=-1 correspond à l'objet: normales intérieures
     n=len(polygone)
-    l=[atan2(-epsilon*(l[i+1][1]-l[i][1]),epsilon*(l[i+1][0]-l[i][0])) 
-                            for i in range(n-1)]
-    l.append(atan2(-epsilon*(l[0][1]-l[n-1][1]),epsilon*(l[0][0]-l[n-1][0])))
-    return l
+    return [atan2(-epsilon*(polygone[(i+1)%n][0]-polygone[i][0]),
+              epsilon*(polygone[(i+1)%n][1]-polygone[i][1])) 
+                            for i in range(n)]
 
 def sum_Minkovski(polygone, objet):
     n=len(polygone)
@@ -25,35 +26,33 @@ def sum_Minkovski(polygone, objet):
         i0=(i0+1)%n
     i=i0 #indice de parcours de ap
     j=1  #indice de parcours de ao
-    S=[polygone[i], (polygone[i][0]+(objet[1][0]-objet[0][0]), 
-                        polygone[i][1]+(objet[1][1]-objet[0][1]))]
-    P=S[1]  #dernier point utilisé
+    S=[(polygone[i][0]-(objet[1][0]-objet[0][0]), 
+                        polygone[i][1]-(objet[1][1]-objet[0][1]))]
+    P=S[0]  #dernier point utilisé
     a=ao[0] #dernier angle utilisé
     while j!=0 or i!=i0:
-        if (ap[i]>=a and ao[j]>ap[i]) or (ap[i]>=a and ao[j]<a)
-            or (ao[i]<a and ao[i]>ap[i]):
+        if ((ap[i]>=a and ao[j]>ap[i]) or (ap[i]>=a and ao[j]<a)
+            or (ao[i]<a and ao[i]>ap[i])):
             P=(P[0]+(polygone[(i+1)%n][0]-polygone[i][0]),
                P[1]+(polygone[(i+1)%n][1]-polygone[i][1]))
             S.append(P)
             a=ap[i]
             i=(i+1)%n
         else:
-            P=(P[0]+(objet[(j+1)%m][0]-objet[j][0]),
-               P[1]+(objet[(j+1)%m][1]-objet[j][1]))
+            P=(P[0]-(objet[(j+1)%m][0]-objet[j][0]),
+               P[1]-(objet[(j+1)%m][1]-objet[j][1]))
             S.append(P)
-            a=ap[j]
-            j=(j+1)%n
+            a=ao[j]
+            j=(j+1)%m
     return S
 
 def simplify(lobstacles, objet):
     #l est la liste des obstacles: liste de polygones
-    #un polygone est une liste de points
-    #un point est un couple d'entiers
     #o est l'objet que l'on veut déplacer (polygone)
 
     lconvexe=[]
     for polygone in lobstacles:
-        lconvexe.extend(get_convexe(polygone))
+        lconvexe.extend(get_convex(polygone))
     #la liste des obstacles est maintenant la liste des polygones convexes
 
     return [sum_Minkovski(polygone,objet) for polygone in lconvexe] 
