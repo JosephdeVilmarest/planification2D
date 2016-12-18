@@ -32,8 +32,7 @@ def intersect(p1,p2,p3,p4):
 
 
 def visibility_graph(depart, arrivee, lobstacles):
-    #je calcule le graphe de visibilite du problème
-    #sous la forme (sommets, matrice d'adjacence)
+    #On calcule le graphe de visibilite du problème
 
     #On met d'abord les sommets dans S:
     #chaque sommet est le couple (point, numero du polygone)
@@ -44,6 +43,8 @@ def visibility_graph(depart, arrivee, lobstacles):
             S.append((point,i))
 
     n=len(S)
+    #On calcule la matrice d'adjacence: comme la complexite est en n^3
+    #on ne perd rien
     M=[[0 for j in range(n)] for i in range(n)]
 
     #Premieres aretes: celles des polygones
@@ -78,4 +79,8 @@ def visibility_graph(depart, arrivee, lobstacles):
                 if flag:
                     M[i][j]=1
                     M[j][i]=1
+
+    #On supprime de M les points qui sont à l'intérieur d'un obstacle
+    #a completer
+
     return (S,M)
