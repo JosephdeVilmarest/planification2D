@@ -6,6 +6,7 @@ def get_convex(polygone):
     #à compléter: pour l'instant on prend des polygones convexes ^^
     return [polygone]
 
+
 def angle_normal(polygone, epsilon):
     #on renvoie la liste des angles entre -pi et pi des normales aux aretes
     #epsilon=1 correspond aux obstacles: normales extérieures
@@ -14,6 +15,7 @@ def angle_normal(polygone, epsilon):
     return [atan2(-epsilon*(polygone[(i+1)%n][0]-polygone[i][0]),
               epsilon*(polygone[(i+1)%n][1]-polygone[i][1])) 
                             for i in range(n)]
+
 
 def sum_Minkowski(polygone, objet):
     n=len(polygone)
@@ -48,6 +50,8 @@ def sum_Minkowski(polygone, objet):
             a=ao[j]
             j=(j+1)%m
     return S
+
+
 
 def simplify(lobstacles, objet):
     #l est la liste des obstacles: liste de polygones
