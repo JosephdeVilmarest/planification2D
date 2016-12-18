@@ -31,6 +31,18 @@ def intersect(p1,p2,p3,p4):
 
 
 
+def interieur(polygone, point):
+    m=len(polygone)
+    #je teste si le point est a gauche de chaque arete orientee du polygone
+    for i in range(m):
+        if ((point[0]-polygone[i][0])*(polygone[i][1]-polygone[(i+1)%m][1])+
+            (point[1]-polygone[i][1])*(polygone[(i+1)%m][0]-polygone[i][0])
+                                <=0):
+            return False
+    return True
+
+
+
 def visibility_graph(depart, arrivee, lobstacles):
     #On calcule le graphe de visibilite du problème
 
@@ -81,6 +93,37 @@ def visibility_graph(depart, arrivee, lobstacles):
                     M[j][i]=1
 
     #On supprime de M les points qui sont à l'intérieur d'un obstacle
-    #a completer
+    for i in range(n):
+        flag=False
+        for polygone in lobstacles:
+            flag=flag or interieur(polygone, S[i][0])
+        if flag:
+            for j in range(n):
+                M[i][j]=0
+                M[j][i]=0
+
+    #cas singulier: si deux polygones obstacles se touchent
+    #il peut y avoir des aretes intra-polygone
+    #on supprime ces aretes en verifiant que le point de depart de l'arete
+    #est a gauche des aretes du polygone en question
+    for i in range(n):
+        p=S[i][0]
+        for j in range(n):
+            if S[i][1]!=S[j][1]:
+                p2=S[j][0]
+                if j<n-1 and S[j+1][1]==S[j][1]:
+                    p3=S[j+1][0]
+                else:
+                    p3=S[j-(len(lobstacles[S[j][1]])-1)][0]
+                if S[j-1][1]==S[j][1]:
+                    p1=S[j-1][0]
+                else:
+                    p1=S[j+(len(lobstacles[S[j][1]])-1)][0]
+                if ((p[0]-p1[0])*(p1[1]-p2[1])+
+                        (p[1]-p1[1])*(p2[0]-p1[0])>=0 and
+                    (p[0]-p2[0])*(p2[1]-p3[1])+
+                        (p[1]-p2[1])*(p3[0]-p2[0])>=0):
+                    M[i][j]=0
+                    M[j][i]=0
 
     return (S,M)
