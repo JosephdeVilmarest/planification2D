@@ -12,7 +12,7 @@ def intersect(p1,p2,p3,p4):
         elif v[1]:
             a=(p1[1]-p3[1])/v[1]
         if ((v[0] or v[1]) and p1[0]==p3[0]+a*v[0] and 
-                        p1[1]==p3[1]+a*v[1] and 0<a and a<1):
+                        p1[1]==p3[1]+a*v[1] and 0<=a and a<=1):
             return True
         
         if v[0]:
@@ -20,14 +20,16 @@ def intersect(p1,p2,p3,p4):
         elif v[1]:
             a=(p2[1]-p3[1])/v[1]
         if ((v[0] or v[1]) and p2[0]==p3[0]+a*v[0] and 
-                        p2[1]==p3[1]+a*v[1] and 0<a and a<1):
+                        p2[1]==p3[1]+a*v[1] and 0<=a and a<=1):
             return True
         
         return False
     
     a=(v[1]*(p3[0]-p1[0])-v[0]*(p3[1]-p1[1]))/(u[0]*v[1]-u[1]*v[0])
-    b=(u[1]*(p3[0]-p1[0])-u[0]*(p3[1]-p1[1]))/(u[1]*v[0]-u[0]*v[1])
-    return (0<a and a<1 and 0<b and b<1)
+    b=(u[1]*(p3[0]-p1[0])-u[0]*(p3[1]-p1[1]))/(-u[1]*v[0]+u[0]*v[1])
+    return (0<=a and a<=1 and 0<=b and b<=1)
+
+
 
 def visibility_graph(depart, arrivee, lobstacles):
     #je calcule le graphe de visibilite du problème
@@ -42,7 +44,7 @@ def visibility_graph(depart, arrivee, lobstacles):
             S.append((point,i))
 
     n=len(S)
-    M=[[0 for i in range(n)] for i in range(n)]
+    M=[[0 for j in range(n)] for i in range(n)]
 
     #Premieres aretes: celles des polygones
     i=2
@@ -58,15 +60,22 @@ def visibility_graph(depart, arrivee, lobstacles):
     #Secondes aretes: entre points n'appartenant pas au meme polygone
     for i in range(n):
         for j in range(i):
-            flag=True
-            for polygone in lobstacles:
-                m=len(polygone)
-                for k in range(m):
-                    if intersect(S[i][0],S[j][0],
-                                polygone[k],polygone[(k+1)%m]):
-                        flag=False
-            if flag:
-                M[i][j]=1
-                M[j][i]=1
-    
+            #On évite les aretes entre points d'un meme polygone
+            if S[i][1]==-1 or S[i][1]!=S[j][1]:
+                flag=True
+                #on regarde si [i,j] intersecte une arete
+                for polygone in lobstacles:
+                    m=len(polygone)
+                    for k in range(m):
+                        #cette condition est necessaire car on refuse
+                        #l'arete lorsqu'elle passe par un autre point
+                        if (polygone[k]!=S[i][0] and polygone[k]!=S[j][0]
+                            and polygone[(k+1)%m]!=S[i][0]
+                            and polygone[(k+1)%m]!=S[j][0]
+                            and intersect(S[i][0],S[j][0],
+                                polygone[k],polygone[(k+1)%m])):
+                            flag=False
+                if flag:
+                    M[i][j]=1
+                    M[j][i]=1
     return (S,M)
