@@ -1,0 +1,26 @@
+#Types utilisés:
+-point: couple (tuple)
+-polygone: liste de points. Attention la liste doit être dans le sens direct !
+
+
+
+Mes algos sont découpés en différentes étapes:
+
+#Simplification du problème: simplify.py
+On donne à simplify la liste des obstacles (polygones) ainsi que l'objet à déplacer. La fonction renvoie une nouvelle liste d'obstacles: les sommes de Minkowski des obstacles avec l'objet. On prend comme point de référence le premier point donné dans la liste objet. Le problème simplifié consiste donc à trouver un chemin (de préférence optimal) entre deux points, qui correspondent aux positions du point de référence, en évitant les obstacles renvoyés par simplify.
+
+ATTENTION pour l'instant get_convex n'a pas été écrite, il faut donc prendre des obstacles convexes jusqu'à nouvel ordre ...
+
+
+
+#Première solution par le graphe de visibilité: visibility.py et dijkstra.py
+visibility prend en entrée les points de départ et d'arrivée ainsi que la liste des obstacles. On crée alors un graphe dont les sommets sont dans S (couples (point, numéro du polygone obstacle auquel appartient le point) avec convention -1 pour depart et arrivee). On écrit le graphe sous la forme de sa matrice d'adjacence M. M[i][j] signifie (i,j) ne croise pas d'obstacle. On renvoie (S,M).
+dijkstra demande l'entrée (S,M) comme défini et renvoie un chemin optimal entre les deux premiers points de S, qui se trouvent être les points de départ et d'arrivée.
+
+Cette approche est en O(n^3) mais a l'avantage de donner une réponse optimale !
+
+
+
+#Deuxième solution par balayage: scanning.py
+Pour le moment mon code est monstrueux ...
+scanning demande la même entrée que visibility et renvoie la liste des cellules. Comme on peut avoir des cellules non bornées, je me permets d'écrire des points infinis en utilisant "Infneg" et "Infpos" avec une convention évidente (vive le typage python). Donc en sortie les cellules sont des quadruplets de points éventuellement infinis. Ce sont des trapèzes donnés en ordre direct.
