@@ -75,17 +75,14 @@ def droite_sup(point,droites):
 
 
 
-def scanning(depart, arrivee, lobstacles):
-    #renvoie le graphe 
-    S=[(depart,-1),(arrivee,-1)]
+def scanning(lobstacles):
+    #renvoie la liste des cellules 
+    S=[]
     for i in range(len(lobstacles)):
         for point in lobstacles[i]:
             S.append((point,i))
-
     n=len(S)
-    I=merge_sort([S[i][0] for i in range(2,n)])
-    for i in range(n-2):
-        I[i] += 2 #pour avoir les indices des 
+    I=merge_sort([S[i][0] for i in range(n)])
     #on garde les segments de chaque polygone qu'on a commence a voir
     #on ajoute des segments infinis
     droites=[[] for i in range(len(lobstacles))]
@@ -96,7 +93,7 @@ def scanning(depart, arrivee, lobstacles):
     #on definit une cellule par 4 points eventuellement infinis
     cellules=[]
 
-    for j in range(n-2):
+    for j in range(n):
         i=I[j]
         point=S[i][0]
         np=S[i][1]
@@ -117,7 +114,7 @@ def scanning(depart, arrivee, lobstacles):
             droites[iinf][0][0]=pinf
             droites[isup][1][0]=psup
             #on ajoute les droites du polygone
-            if S[i-1][1]==np:
+            if (i>0 and S[i-1][1]==np):
                 droites[np].append([point,S[i-1][0]])
             else:
                 droites[np].append([point,S[i+len(lobstacles[np])-1][0]])
@@ -182,7 +179,7 @@ def scanning(depart, arrivee, lobstacles):
             droites[np]=[]
 
     #on ajoute la derniere cellule
-    cellules.append(((S[I[n-3]][0][0],"Infpos"),(S[I[n-3]][0][0], "Infneg"),
+    cellules.append(((S[I[n-1]][0][0],"Infpos"),(S[I[n-1]][0][0], "Infneg"),
                         ("Infpos", "Infneg"),("Infpos", "Infpos")))
 
     return cellules

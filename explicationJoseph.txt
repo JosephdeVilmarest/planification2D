@@ -37,8 +37,8 @@ optimale ! Et pour l'instant elle a l'avantage de fonctionner ...
 
 
 #Deuxième solution par balayage: scanning.py
-Pour le moment mon code est monstrueux ...
-scanning demande la même entrée que visibility et renvoie la liste des 
+Mon code est monstrueux ...
+scanning demande la liste des obstacles en entrée et renvoie la liste des 
 cellules. Comme on peut avoir des cellules non bornées, je me permets 
 d'écrire des points infinis en utilisant "Infneg" et "Infpos" avec une 
 convention évidente (vive le typage python). Donc en sortie les cellules 
