@@ -5,6 +5,7 @@ from enum import IntEnum
 from simplify import simplify
 from visibility import visibility_graph
 from dijkstra import dijkstra
+from scanning import scanning
 
 State = IntEnum("State", "Idle Adding Begin End")
 
@@ -30,12 +31,16 @@ class Main(QMainWindow):
         act.triggered.connect(self.visibility)
         tb.addAction(act)
         act = QAction("Dijkstra", self)
-        act.setToolTip("Graphe de visibilité")
+        act.setToolTip("Dijkstra")
         act.triggered.connect(self.dijkstra)
+        tb.addAction(act)
+        act = QAction("Scan", self)
+        act.setToolTip("Division en trapèze")
+        act.triggered.connect(self.scan)
         tb.addAction(act)
 
     def clear(self):
-        self.zones.clear()
+        self.zone.clear()
         self.update()
         
     def simplify(self):
@@ -59,7 +64,10 @@ class Main(QMainWindow):
             return
         self.zone.dj = dijkstra(*self.zone.vg)
         self.update()
-        
+    
+    def scan(self):
+        self.zone.scan = scanning(self.zone.polys)
+        self.update()
 
 class Zone(QWidget):
     """ La zone où sont affichés les polygones """
@@ -73,43 +81,59 @@ class Zone(QWidget):
         self.points = []
         self.begin = None
         self.end = None
-        self.dj=None
+        self.dj = None
         self.vg = None
+        self.scan = None
+        self.showNumbers = False
         
     def paintEvent(self, event):
+        POINTR = 2.5
         paint = QPainter(self)
+        paint.setRenderHint(paint.Antialiasing)
         #grad = QRadialGradient(0,0, 100)
         #grad.setColorAt(0, Qt.white)
         #grad.setColorAt(1, Qt.red)
+        def drawPoint(p):
+            paint.drawEllipse(p[0]-POINTR, p[1]-POINTR, 2*POINTR, 2*POINTR)
+            
         paint.setBrush(Qt.red)
         for pl in self.polys:
             paint.drawPolygon(QPolygon([QPoint(*p) for p in pl]))
+            if self.showNumbers:
+                for i,p in enumerate(pl):
+                    paint.drawText(*p, str(i))
         for i in range(len(self.points)-1):
             paint.drawLine(*self.points[i], *self.points[i+1])
-        for p in self.points:
-            paint.drawEllipse(*p, 5, 5)
+        for p in self.points: drawPoint(p)
         paint.setBrush(Qt.green)
-        if self.begin:
-            paint.drawEllipse(*self.begin, 5, 5)
-        if self.end:
-            paint.drawEllipse(*self.end, 5, 5)
+        if self.begin: drawPoint(self.begin)
+        if self.end:   drawPoint(self.end)
+        if self.dj:
+            pen = QPen(Qt.darkGreen)
+            pen.setWidth(2)
+            paint.setPen(pen)
+            for i in range(len(self.dj)-1):
+                paint.drawLine(*self.dj[i], *self.dj[i+1])
         if self.vg:
+            paint.setPen(Qt.black)
             S, M = self.vg
-            for i in range(len(S)):
-                paint.drawEllipse(*S[i][0], 5, 5)
             for i in range(len(M)):
                 for j in range(i,len(M[0])):
                     if M[i][j]:
                         paint.drawLine(*S[i][0], *S[j][0])
-        if self.dj:
-            pen = QPen(Qt.darkGreen)
-            pen.setWidth(3)
-            paint.setPen(pen)
-            for i in range(len(self.dj)-1):
-                paint.drawLine(*self.dj[i], *self.dj[i+1])
-            
-#        QPolygon([QPoint(*p) for p in self.points]))
-        
+            for i in range(len(S)): drawPoint(S[i][0])
+        def cv(v):
+            if v=="Infpos": return 0
+            elif v=="Infneg": return 1000
+            else: return v
+        if self.scan:
+            for cell in self.scan:
+                for i in range(4):
+                    try:
+                        paint.drawLine(cv(cell[i][0]),cv(cell[i][1]),cv(cell[i+1][0]),cv(cell[i+1][1]))
+                    except:
+                        pass
+                    
     def mousePressEvent(self, event):
         x,y = event.x(), event.y()
         if event.button() ==  Qt.LeftButton:
@@ -118,6 +142,14 @@ class Zone(QWidget):
             if self.state == State.Adding:
                 for px,py in self.points:
                     if dist((x,y),(px,py))<20:
+                        d = dist(self.points[0], self.points[1])/5
+                        testPoint =  (self.points[0][0]+self.points[1][0])/2\
+                                      +(self.points[1][1]-self.points[0][1])/d,\
+                                     (self.points[0][1]+self.points[1][1])/2\
+                                      -(self.points[1][0]-self.points[0][0])/d
+                        if not QPolygon([QPoint(*p) for p in self.points]).containsPoint(QPoint(*testPoint), Qt.OddEvenFill):
+                            self.points.reverse()
+                        #(self.points[0][0]+self.points[1][0])/2+(self.points[0][1]-self.points[1][1])/20, (self.points[0][1]+self.points[1][1])/2+(self.points[0][0]-self.points[1][0])/20
                         self.polys.append(self.points)
                         #
                         self.points = []
