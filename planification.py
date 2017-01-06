@@ -91,7 +91,7 @@ class Model:
 
 
 
-class Main(*loadUiType("plannification.ui")):
+class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
         super().__init__(*args)
         self.setupUi(self)
