@@ -101,9 +101,9 @@ class Zone(QWidget):
             paint.drawPolygon(QPolygon([QPoint(*p) for p in pl]))
             if self.showNumbers:
                 for i,p in enumerate(pl):
-                    paint.drawText(*p, str(i))
+                    paint.drawText(p[0],p[1], str(i))
         for i in range(len(self.points)-1):
-            paint.drawLine(*self.points[i], *self.points[i+1])
+            paint.drawLine(*(self.points[i]+self.points[i+1]))
         for p in self.points: drawPoint(p)
         paint.setBrush(Qt.green)
         if self.begin: drawPoint(self.begin)
@@ -113,14 +113,14 @@ class Zone(QWidget):
             pen.setWidth(2)
             paint.setPen(pen)
             for i in range(len(self.dj)-1):
-                paint.drawLine(*self.dj[i], *self.dj[i+1])
+                paint.drawLine(*(self.dj[i]+self.dj[i+1]))
         if self.vg:
             paint.setPen(Qt.black)
             S, M = self.vg
             for i in range(len(M)):
                 for j in range(i,len(M[0])):
                     if M[i][j]:
-                        paint.drawLine(*S[i][0], *S[j][0])
+                        paint.drawLine(*(S[i][0]+S[j][0]))
             for i in range(len(S)): drawPoint(S[i][0])
         def cv(v):
             if v=="Infpos": return 0
