@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <widget class="QSplitter" name="splitter_2">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -41,7 +41,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>108</width>
+             <width>98</width>
              <height>531</height>
             </rect>
            </property>
@@ -59,7 +59,27 @@
         <bool>false</bool>
        </property>
        <widget class="QGraphicsView" name="object"/>
-       <widget class="QWidget" name="widget" native="true"/>
+       <widget class="QWidget" name="widget" native="true">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QScrollArea" name="essais">
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents_2">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>320</width>
+              <height>70</height>
+             </rect>
+            </property>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -100,7 +120,7 @@
     <addaction name="actionAideContextuelle"/>
     <addaction name="separator"/>
     <addaction name="actionPropos"/>
-    <addaction name="action_aProposDeQt"/>
+    <addaction name="actionProposQt"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
    </widget>
@@ -170,7 +190,7 @@
     <string>Ctrl+Shift+P</string>
    </property>
   </action>
-  <action name="action_aProposDeQt">
+  <action name="actionProposQt">
    <property name="text">
     <string>À propos de &amp;Qt</string>
    </property>
