@@ -91,7 +91,11 @@ class Controller(QGraphicsEllipseItem):
         self.next = self
         self.scene = scene
         self.setPrevious(previous)
-        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIgnoresTransformations)
+        self.setFlags(QGraphicsItem.ItemIsMovable |
+                      QGraphicsItem.ItemIgnoresTransformations |
+                      QGraphicsItem.ItemSendsScenePositionChanges)
+        self.new = True
+        self.setCurrent(False)
         self.scene.setCurrentController(self)
         
 
@@ -109,50 +113,144 @@ class Controller(QGraphicsEllipseItem):
         else:
             self.previous = self
             self.next = self
-
+            
+    def contains(self, p):
+        print("grrr")
+        return False
         
-    def setPos(self, p):
+    def setPos(self, p, quiet = False):
         super().setPos(p)
-        self.scene.controllerMoved()
+        if not quiet:
+            self.scene.controllerMoved()
+        self.scene.updateDirectLine()
 
     def mouseMoveEvent(self, me):
         super().mouseMoveEvent(me)
+        self.wasCurrent = False
+        self.setCursor(Qt.ClosedHandCursor)
         self.scene.controllerMoved()
+        self.scene.updateDirectLine()
+        
 
     def mousePressEvent(self, me):
         if me.button() == Qt.RightButton:
             self.scene.removeController(self)
             return
+        self.wasCurrent = self.current
         self.scene.setCurrentController(self)
-        print("press")
         super().mousePressEvent(me)
 
     def mouseReleaseEvent(self, me):
-        print("release")
+        super().mouseReleaseEvent(me)
+        self.setCursor(Qt.ArrowCursor)
+        if self.new:
+            self.wasCurrent = False
+            self.new = False
+        self.setCurrent(not self.wasCurrent)
+        if self.wasCurrent:
+            self.scene.setCurrentController(None)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            rect = self.scene.sceneRect()
+            if not rect.contains(value):
+                value.setX(min(rect.right(), max(value.x(), rect.left())))
+                value.setY(min(rect.bottom(), max(value.y(), rect.top())))
+        return value
+
+class Polygon(QGraphicsPolygonItem):
+    def __init__(self, cts, *args):
+        c = cts[0]
+        cts.remove(c)
+        l = [c.pos()]
+        self.ctrl = [(c,c.pos())]
+        ct = c.next
+        while ct != c:
+            cts.remove(ct)
+            l.append(ct.pos())
+            self.ctrl.append((ct,ct.pos()))
+            ct = ct.next
+        super().__init__(QPolygonF(l), *args)
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
+        self.setBrush(QBrush(QColor(0,255,255)))
+        self.setZValue(-2)
+
+    def mousePressEvent(self, me):
+        self.setCursor(Qt.ClosedHandCursor)
+        self.setZValue(3)
+        for c in self.ctrl:
+            c[0].setZValue(2.5)
+        super().mousePressEvent(me)
+        
+
+    def mouseMoveEvent(self, me):
+        super().mouseMoveEvent(me)
+        p = self.pos()
+        for c in self.ctrl:
+            c[0].setPos(c[1]+p, True)
+
+    def mouseReleaseEvent(self, me):
+        self.setCursor(Qt.ArrowCursor)
+        self.setZValue(-2)
+        for c in self.ctrl:
+            c[0].setZValue(c[0].current)
         super().mouseReleaseEvent(me)
 
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            rect = self.scene().sceneRect()
+            dpx = 0
+            dpy = 0
+            dmx = 0
+            dmy = 0
+            for c in self.ctrl:
+                dpx = max(dpx, rect.left()-c[1].x()-value.x())
+                dpy = max(dpy, rect.top()-c[1].y()-value.y())
+                dmx = min(dmx, rect.right()-c[1].x()-value.x())
+                dmy = min(dmy, rect.bottom()-c[1].y()-value.y())
+            value.setX(value.x() + dpx + dmx)
+            value.setY(value.y() + dpy + dmy)
+        return value
 
 class PolyScene(QGraphicsScene):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.scale = 1
         self.controllers = []
         self.currentController = None
-        self.polygon = None
+        self.polygons = []
+        self.directLine = None
+        self.setSceneRect(QRectF(0,0,100,100))
+        self.rect = self.addRect(QRectF(0,0,100,100), QPen(QColor(0,0,0)), QBrush(QColor(255,255,255)))
+        self.rect.setZValue(-10)
+        
+
+    def updateDirectLine(self):
+        if self.directLine:
+            self.removeItem(self.directLine)
+        if self.currentController:
+            self.directLine = QGraphicsLineItem(QLineF(self.currentController.pos(),
+                                                       self.currentController.next.pos()))
+            self.directLine.setPen(QPen(QColor(0,0,255)))
+            self.directLine.setZValue(-.5)
+            self.addItem(self.directLine)
 
     def mousePressEvent(self, me):
-        if self.itemAt(me.scenePos()) != None:
-            print("oups")
+        print(self.itemAt(me.scenePos(), self.view.transform()))
+        print(self.rect)
+        if not self.itemAt(me.scenePos(), self.view.transform()) in [None, self.rect]:
             super().mousePressEvent(me)
             return
+        print("ajout")
         self.addController(me.scenePos())
         super().mousePressEvent(me)
 
     def addController(self, pos):
         ctrl = Controller(self,self.currentController, QRectF(-QPointF(EL_SIZE//2,EL_SIZE//2),QSizeF(EL_SIZE,EL_SIZE)))
-        ctrl.setPos(pos)
         self.controllers.append(ctrl)
         self.addItem(self.controllers[-1])
+        ctrl.setPos(pos)
 
     def removeController(self, ctrl):
         self.setCurrentController(None)
@@ -168,22 +266,20 @@ class PolyScene(QGraphicsScene):
         self.currentController = ctrl
         if self.currentController:
             self.currentController.setCurrent(True)
+        self.updateDirectLine()
 
     def controllerMoved(self):
-        self.removeItem(self.polygon)
-        if len(self.controllers):
-            c = self.controllers[0]
-            l = [c.pos()]
-            ct = c.next
-            while ct != c:
-                l.append(ct.pos())
-                ct = ct.next
-            #print(l)
-            self.polygon = QGraphicsPolygonItem(QPolygonF(l))
-            self.polygon.setBrush(QBrush(QColor(0,255,255)))
-            self.polygon.setZValue(-2)
-            self.addItem(self.polygon)
-
+        for p in self.polygons:
+            self.removeItem(p)
+        self.polygons = []
+        cts = list(self.controllers)
+        while len(cts):
+            self.polygons.append(Polygon(cts))
+            self.addItem(self.polygons[-1])
+            
+    def keyPressEvent(self, ke):
+        if ke.key() == Qt.Key_Escape:
+            self.setCurrentController(None)
 
         
 class Model:
@@ -212,9 +308,11 @@ class Main(*loadUiType("planification.ui")):
         self.steps.setWidget(StepPainter(self.drawEnvi))
 
         self.envi.setSceneRect(QRectF(0,0,100,100))
+        self.envi.setRenderHint(QPainter.Antialiasing)
         it = QGraphicsPolygonItem()
         it.setPolygon(QPolygonF([QPoint(*p) for p in self.model.envi]))
         self.sc = PolyScene(self)
+        self.sc.view = self.envi
         #self.sc.addItem(it)
 
         # BUG de Qt (Il faudrait utiliser 5...)
@@ -228,8 +326,8 @@ class Main(*loadUiType("planification.ui")):
                 we.accept()
             else:
                 #print(we.delta())
-                b = -5 if we.delta() < 0 else 5
-                b = we.delta()/4
+                #b = -5 if we.delta() < 0 else 5
+                b = -we.delta()/4
                 if we.modifiers() & Qt.ShiftModifier:
                     self.envi.horizontalScrollBar().setValue(
                         self.envi.horizontalScrollBar().value() + b)
@@ -237,34 +335,6 @@ class Main(*loadUiType("planification.ui")):
                     self.envi.verticalScrollBar().setValue(
                         self.envi.verticalScrollBar().value() + b)
 
-
-        def mousePressEvent(me):
-            if self.sc.itemAt(me.scenePos()) != None:
-                QGraphicsScene.mousePressEvent(self.sc, me)
-                return
-            el = Controller(QRectF(me.scenePos()-QPointF(7,7),QSizeF(15,15)))
-
-            def mousePressEvent(me):
-                if me.button() == Qt.RightButton:
-                    el.previous.next = el.next
-                    el.next.previous = el.previous
-                    self.sc.removeItem(el)
-                    self.currentItem = None
-                    return
-                if self.currentItem == el:
-                    self.currentItem.setCurrent(False)
-                    self.currentItem = None
-                else:
-                    if self.currentItem:
-                        self.currentItem.setCurrent(False)
-                    self.currentItem = el
-                    el.setCurrent()
-            el.mousePressEvent = mousePressEvent
-            print("hum")
-            el.setPrevious(self.currentItem)
-            self.sc.addItem(el)
-            self.sc.mousePressEvent(me)
-        #self.sc.mousePressEvent = mousePressEvent
         self.envi.wheelEvent = wheelEvent
 
 
