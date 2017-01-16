@@ -4,7 +4,40 @@ def get_convex(polygone):
     #on renvoie une liste de polygones convexes dont 
     #l'union (disjointe) est égale au polygone de départ
     #à compléter: pour l'instant on prend des polygones convexes ^^
-    return [polygone]
+    n=len(polygone)
+    i=0
+    while ((polygone[(i+1)%n][1]-polygone[i][1])*
+                (polygone[(i+2)%n][0]-polygone[(i+1)%n][0])-
+           (polygone[(i+1)%n][0]-polygone[i][0])*
+                (polygone[(i+2)%n][1]-polygone[(i+1)%n][1])>0):
+        #on trouve un premier "point convexe"
+        i+=1
+    i0=i
+    i+=1
+    while ((polygone[(i+1)%n][1]-polygone[i][1])*
+                (polygone[(i+2)%n][0]-polygone[(i+1)%n][0])-
+           (polygone[(i+1)%n][0]-polygone[i][0])*
+                (polygone[(i+2)%n][1]-polygone[(i+1)%n][1])<0) and (i!=i0):
+        #on trouve un "point concave" s'il existe
+        i=(i+1)%n
+    if (i==i0):
+        #le polygone est convexe
+        return [polygone]
+    j=(i-1)%n
+    while ((polygone[(i+1)%n][1]-polygone[i][1])*
+                (polygone[j][0]-polygone[(i+1)%n][0])-
+           (polygone[(i+1)%n][0]-polygone[i][0])*
+                (polygone[j][1]-polygone[(i+1)%n][1])<0):
+        #on cherche un grand sous-polygone-convexe
+        j=(j-1)%n
+    j=(j+1)%n
+    if j<i+1:
+        ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
+        ans.append(polygone[j:(i+2)])
+    else:
+        ans=get_convex(polygone[(i+1):(j+1)])
+        ans.append(polygone[j:]+polygone[:(i+2)])
+    return ans
 
 
 def angle_normal(polygone, epsilon):
