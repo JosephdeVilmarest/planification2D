@@ -3,6 +3,8 @@ from PyQt4.QtGui import *
 from PyQt4.uic import loadUiType
 import sys
 
+from simplify import simplify
+
 EL_SIZE = 15
 
 class Step:
@@ -152,7 +154,7 @@ class Controller(QGraphicsEllipseItem):
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
-            rect = self.scene.sceneRect()
+            rect = self.scene.rect.rect()
             if not rect.contains(value):
                 value.setX(min(rect.right(), max(value.x(), rect.left())))
                 value.setY(min(rect.bottom(), max(value.y(), rect.top())))
@@ -177,7 +179,8 @@ class Polygon(QGraphicsPolygonItem):
         self.setZValue(-2)
 
     def mousePressEvent(self, me):
-        self.setCursor(Qt.ClosedHandCursor)
+        if me.buttons() & Qt.LeftButton:
+            self.setCursor(Qt.ClosedHandCursor)
         self.setZValue(3)
         for c in self.ctrl:
             c[0].setZValue(2.5)
@@ -199,7 +202,7 @@ class Polygon(QGraphicsPolygonItem):
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
-            rect = self.scene().sceneRect()
+            rect = self.scene().rect.rect()
             dpx = 0
             dpy = 0
             dmx = 0
@@ -237,8 +240,8 @@ class PolyScene(QGraphicsScene):
             self.addItem(self.directLine)
 
     def mousePressEvent(self, me):
-        print(self.itemAt(me.scenePos(), self.view.transform()))
-        print(self.rect)
+        #print(self.itemAt(me.scenePos(), self.view.transform()))
+        #print(self.rect)
         if not self.itemAt(me.scenePos(), self.view.transform()) in [None, self.rect]:
             super().mousePressEvent(me)
             return
@@ -281,6 +284,9 @@ class PolyScene(QGraphicsScene):
         if ke.key() == Qt.Key_Escape:
             self.setCurrentController(None)
 
+
+    def environment(self, LEN):
+        return [[(int(LEN*p.x()/100), int(LEN*p.y()/100)) for p in i.polygon()] for i in self.polygons]
         
 class Model:
     def __init__(self):
@@ -294,6 +300,8 @@ class Main(*loadUiType("planification.ui")):
         super().__init__(*args)
         self.setupUi(self)
         self.splitter_2.setSizes([300,150,150])
+        self.toolBar.addAction(self.actionQuitter)
+        self.splitter_3.setSizes([170,25])
         
         self.currentItem = None
         self.model = Model()
@@ -307,36 +315,46 @@ class Main(*loadUiType("planification.ui")):
         a=Step(Step(self.drawEnvi))
         self.steps.setWidget(StepPainter(self.drawEnvi))
 
-        self.envi.setSceneRect(QRectF(0,0,100,100))
         self.envi.setRenderHint(QPainter.Antialiasing)
         it = QGraphicsPolygonItem()
         it.setPolygon(QPolygonF([QPoint(*p) for p in self.model.envi]))
         self.sc = PolyScene(self)
         self.sc.view = self.envi
+
+        self.object = PolyScene(self)
+        self.obj.setScene(self.object)
+        self.object.view = self.obj
         #self.sc.addItem(it)
 
         # BUG de Qt (Il faudrait utiliser 5...)
         self.actionProposQt.triggered.connect(self.on_actionProposDeQt_triggered, Qt.UniqueConnection)
 
         self.envi.setScene(self.sc)
-        def wheelEvent(we):
-            if we.modifiers() & Qt.ControlModifier:
-                a = .9 if we.delta() < 0 else 1.1
-                self.envi.scale(a,a)
-                we.accept()
-            else:
-                #print(we.delta())
-                #b = -5 if we.delta() < 0 else 5
-                b = -we.delta()/4
-                if we.modifiers() & Qt.ShiftModifier:
-                    self.envi.horizontalScrollBar().setValue(
-                        self.envi.horizontalScrollBar().value() + b)
+        def wheelEvent(view):
+            def wheelEvent(we):
+                if we.modifiers() & Qt.ControlModifier:
+                    a = .9 if we.delta() < 0 else 1.1
+                    view.scale(a,a)
+                    we.accept()
                 else:
-                    self.envi.verticalScrollBar().setValue(
-                        self.envi.verticalScrollBar().value() + b)
+                    #print(we.delta())
+                    #b = -5 if we.delta() < 0 else 5
+                    b = -we.delta()/4
+                    if we.modifiers() & Qt.ShiftModifier:
+                        view.horizontalScrollBar().setValue(
+                            view.horizontalScrollBar().value() + b)
+                    else:
+                        view.verticalScrollBar().setValue(
+                            view.verticalScrollBar().value() + b)
+            view.wheelEvent = wheelEvent
+        wheelEvent(self.envi)
+        wheelEvent(self.obj)
 
-        self.envi.wheelEvent = wheelEvent
-
+        QTimer.singleShot(20, lambda : self.envi.scale(min(self.envi.width()/120, self.envi.height()/120),
+                                                       min(self.envi.width()/120, self.envi.height()/120)))
+        #self.envi.setSceneRect(QRectF(-10,-10,120,120))
+        #self.obj.setSceneRect(QRectF(-10,-10,120,120))
+       
 
 
     def on_actionNouveau_triggered(self):
@@ -347,7 +365,13 @@ class Main(*loadUiType("planification.ui")):
 
     def on_actionProposDeQt_triggered(self):
         QMessageBox.aboutQt(self,"À propos de Qt")
-        
+
+    def on_actionSimplifier_triggered(self):
+        LEN = 100
+        o = self.object.environment(LEN)[0]
+        m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
+        for p in simplify(self.sc.environment(LEN), o):
+            self.sc.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
 
     def setModel(self, model):
         pass

@@ -56,10 +56,12 @@ def sum_Minkowski(polygone, objet):
 def simplify(lobstacles, objet):
     #l est la liste des obstacles: liste de polygones
     #o est l'objet que l'on veut déplacer (polygone)
-
+    print(lobstacles, objet)
     lconvexe=[]
     for polygone in lobstacles:
         lconvexe.extend(get_convex(polygone))
     #la liste des obstacles est maintenant la liste des polygones convexes
-
-    return [sum_Minkowski(polygone,objet) for polygone in lconvexe] 
+    print("ici", lconvexe)
+    p = [sum_Minkowski(polygone,objet) for polygone in lconvexe]
+    print("ok")
+    return p
