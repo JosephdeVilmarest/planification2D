@@ -1,4 +1,4 @@
-from math import sqrt, atan2
+from math import sqrt, atan2, pi
 
 def interieur(polygone, point):
     m=len(polygone)
@@ -92,14 +92,25 @@ def get_convex(polygon):
         return p[a]
     def coupe(i,j):
         """Tells if the (i;j) edge is in the polygon"""
+        l = len(polygon)
+        if (i+1)%l == j:return False
         det = lambda i,j,k : (i[0]-j[0])*(k[1]-j[1])-(i[1]-j[1])*(k[0]-j[0])
-        for k in range(len(polygon)):
-            if {i,j}&{k,(k-1)%len(polygon)} and det(polygon[i], polygon[k], 
-                    polygon[j])*det(polygon[j], polygon[k-1], polygon[i]) > 0:
+        for k in range(l):
+            if (det(polygon[i], polygon[k], polygon[j])*
+                det(polygon[j], polygon[k-1], polygon[i]) > 0 and
+                det(polygon[k], polygon[i], polygon[k-1])*
+                det(polygon[k-1], polygon[j], polygon[k]) > 0):
+                print(i,j,"-", k,polygon[i],polygon[j],polygon[k],polygon[k-1])
                 return False
-        return True#det(polygon[i-1], polygon[i], polygon[j])*det(polygon[j], polygon[i], polygon[(i+1)%len(polygon)])>0;
-    l = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i) if coupe(i,j)]
+        a1 = atan2(polygon[i-1][0]-polygon[i][0],polygon[i-1][1]-polygon[i][1])
+        a2 = atan2(polygon[(i+1)%l][0]-polygon[i][0],polygon[(i+1)%l][1]-polygon[i][1])
+        if a2<a1 : a2+=2*pi
+        a3 = atan2(polygon[j][0]-polygon[i][0],polygon[j][1]-polygon[i][1])
+        if a3<a1 : a3+=2*pi
+        return a3<a2
+    l = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i-1) if coupe(i,j)]
     connus = {}
+    print("")
     return l#best(tuple(polygone))[0]
 
 

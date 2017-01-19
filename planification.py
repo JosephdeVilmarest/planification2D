@@ -555,7 +555,7 @@ class Main(*loadUiType("planification.ui")):
         for i,p in enumerate(conv):
             rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
             self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
-                               QPen(QColor(0,0,0,255)),
+                               QPen(QColor(200,0,250,255)),
                                QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
         print("Au revoir")
         #for p in poly:
