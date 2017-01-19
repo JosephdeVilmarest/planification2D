@@ -74,6 +74,34 @@ def get_convex(polygone):
                 ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
             return ans
 
+def get_convex(polygon):
+    def best(p):
+        if convexe(p): return 0,[]
+        if p in connus: return connus[p]
+        l = lapartiedeldansp
+        m = len(p)**2, None
+        for a in l:
+            p1,p2 = coupeen2(p,a)
+            v1,a1 = best(p1)
+            v2,a2 = best(p2)
+            v = 1+v1+v2
+            if v<m[0]: m = v, a1+a2+[a]
+        return m
+    def coupeen2(p,a):
+        i,j = a
+        return p[a]
+    def coupe(i,j):
+        """Tells if the (i;j) edge is in the polygon"""
+        det = lambda i,j,k : (i[0]-j[0])*(k[1]-j[1])-(i[1]-j[1])*(k[0]-j[0])
+        for k in range(len(polygon)):
+            if {i,j}&{k,(k-1)%len(polygon)} and det(polygon[i], polygon[k], 
+                    polygon[j])*det(polygon[j], polygon[k-1], polygon[i]) > 0:
+                return False
+        return True#det(polygon[i-1], polygon[i], polygon[j])*det(polygon[j], polygon[i], polygon[(i+1)%len(polygon)])>0;
+    l = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i) if coupe(i,j)]
+    connus = {}
+    return l#best(tuple(polygone))[0]
+
 
 def angle_normal(polygone, epsilon):
     #on renvoie la liste des angles entre -pi et pi des normales aux aretes
@@ -124,12 +152,13 @@ def sum_Minkowski(polygone, objet):
 def simplify(lobstacles, objet):
     #l est la liste des obstacles: liste de polygones
     #o est l'objet que l'on veut déplacer (polygone)
-    print(lobstacles, objet)
+    #print(lobstacles, objet)
     lconvexe=[]
     for polygone in lobstacles:
         lconvexe.extend(get_convex(polygone))
     #la liste des obstacles est maintenant la liste des polygones convexes
-    print("ici", lconvexe)
+    #print("ici", lconvexe)
     p = []#[sum_Minkowski(polygone,objet) for polygone in lconvexe]
-    print("ok")
+    #print("ok")
+    #lconvexe = [p]#[[(10,10),(5000,5000),(2000,2000)]]
     return p, lconvexe
