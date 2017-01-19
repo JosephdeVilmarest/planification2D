@@ -269,16 +269,16 @@ class PolygonPos(QGraphicsPolygonItem):
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange:
-            rect = QRect(0,0,100,100)
+            rect = QRect(0,0,101,101)
             dpx = 0
             dpy = 0
             dmx = 0
             dmy = 0
             for c in self.polygon():
-                dpx = max(dpx, rect.left()-c[1].x()-value.x())
-                dpy = max(dpy, rect.top()-c[1].y()-value.y())
-                dmx = min(dmx, rect.right()-c[1].x()-value.x())
-                dmy = min(dmy, rect.bottom()-c[1].y()-value.y())
+                dpx = max(dpx, rect.left()-c.x()-value.x())
+                dpy = max(dpy, rect.top()-c.y()-value.y())
+                dmx = min(dmx, rect.right()-c.x()-value.x())
+                dmy = min(dmy, rect.bottom()-c.y()-value.y())
             value.setX(value.x() + dpx + dmx)
             value.setY(value.y() + dpy + dmy)
         return value
@@ -379,24 +379,35 @@ class EnvironmentScene(PolyScene):
 
     @pyqtSlot(list)
     def setObject(self, polygon):
+        pi = QPointF(20,20)
+        pf = QPointF(80,80)
         if self.initialPos:
             self.removeItem(self.initialPos)
+            p = self.initialPos.polygon()
+            pi = QPointF()
+            for i in p : pi += i
+            pi /= len(p)
             self.removeItem(self.finalPos)
+            p = self.finalPos.polygon()
+            pf = QPointF()
+            for i in p : pf += i
+            pf /= len(p)
         if len(polygon) < 3:
             self.initialPos = None
             self.finalPos = None
         else:
             print(polygon)
-            self.initialPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN+10,p[1]*20/LEN+10) for p in polygon]))
+            self.initialPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN,p[1]*20/LEN) for p in polygon]))
             self.initialPos.setPen(QPen(Qt.NoPen))
             self.initialPos.setBrush(QBrush(QColor(255,100,100)))
             self.initialPos.setZValue(60)
-            self.initialPos.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.initialPos.setPos(QPointF(pi))
             self.addItem(self.initialPos)
-            self.finalPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN+90,p[1]*20/LEN+90) for p in polygon]))
+            self.finalPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN,p[1]*20/LEN) for p in polygon]))
             self.finalPos.setPen(QPen(Qt.NoPen))
             self.finalPos.setBrush(QBrush(QColor(100,255,100)))
             self.finalPos.setZValue(60)
+            self.initialPos.setPos(QPointF(pf))
             self.addItem(self.finalPos)
             
 class ObjectScene(PolyScene):
@@ -499,7 +510,7 @@ class Main(*loadUiType("planification.ui")):
 
         self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
         #self.environment.polyChanged.connect(self.updatePipeLine)
-        #self.object.polyChanged.connect(self.updateObject)
+        self.object.polyChanged.connect(self.updateObject)
         #self.envi.setSceneRect(QRectF(-10,-10,120,120))
         #self.obj.setSceneRect(QRectF(-10,-10,120,120))
        
@@ -534,7 +545,7 @@ class Main(*loadUiType("planification.ui")):
                 po.reverse()
         print("Je m'en vais")
         poly, conv = simplify(e, o)
-        print(len(conv))
+        print((conv))
         m = [0,0]
         for i in self.vue:
             self.environment.removeItem(i)
