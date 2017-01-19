@@ -68,10 +68,10 @@ def get_convex(polygone):
         else:
             if j<(i+1)%n:
                 ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
-                ans.append(polygone[j:(i+2)])
+                ans.extend(get_convex(polygone[j:(i+2)]))
             else:
                 ans=get_convex(polygone[(i+1)%n:(j+1)])
-                ans.append(polygone[j:]+polygone[:(i+2)])
+                ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
             return ans
 
 
