@@ -38,7 +38,7 @@ def get_convex(polygone):
         while is_angle_convex(polygone[j],
                 polygone[(i+1)%n],polygone[(i+2)%n]) and flag:
             #on cherche un grand sous-polygone convexe
-            if j<i+1:
+            if j<(i+1)%n:
                 pol=polygone[j:(i+2)]
                 for k in range(j):
                     if interieur(pol,polygone[k]):
@@ -62,7 +62,7 @@ def get_convex(polygone):
             i+=1
 
         else:
-            if j<i+1:
+            if j<(i+1)%n:
                 ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
                 ans.extend(get_convex(polygone[j:(i+2)]))
             else:
