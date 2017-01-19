@@ -11,7 +11,7 @@ def interieur(polygone, point):
     return True
 
 def is_angle_convex(p1,p2,p3):
-    return ((p3[1]-p2[1])*(p2[0]-p1[0])-(p3[0]-p2[0])*(p2[1]-p1[1])<=0)
+    return ((p3[1]-p2[1])*(p2[0]-p1[0])-(p3[0]-p2[0])*(p2[1]-p1[1])>=0)
 
 def get_convex(polygone):
     #on renvoie une liste de polygones convexes dont 
@@ -20,23 +20,27 @@ def get_convex(polygone):
     n=len(polygone)
     i=0
     while True:
+        print("Bonjour convexe",polygone)
         while not(is_angle_convex(polygone[i],
                 polygone[(i+1)%n],polygone[(i+2)%n])):
             #on trouve un premier "point convexe"
-            i+=1
+            i=(i+1)%n
         i0=i
-        i+=1
+        print(i0)
+        i=(i+1)%n
         while is_angle_convex(polygone[i],
-                polygone[(i+1)%n],polygone[(i+2)%n]) and (i!=i0):
+                polygone[(i0+1)%n],polygone[(i0+2)%n]) and (i!=i0):
+            print("i",i)
             #on trouve un "point concave" s'il existe
             i=(i+1)%n
         if (i==i0):
+            print("convexe")
             #le polygone est convexe
             return [polygone]
         j=(i-1)%n
         flag=True
         while is_angle_convex(polygone[j],
-                polygone[(i+1)%n],polygone[(i+2)%n]) and flag:
+                polygone[(i+1)%n],polygone[(i+2)%n]) and flag and (j!=i):
             #on cherche un grand sous-polygone convexe
             if j<(i+1)%n:
                 pol=polygone[j:(i+2)]
