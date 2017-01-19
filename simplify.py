@@ -33,10 +33,10 @@ def get_convex(polygone):
     j=(j+1)%n
     if j<i+1:
         ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
-        ans.append(polygone[j:(i+2)])
+        ans.extend(get_convex(polygone[j:(i+2)]))
     else:
         ans=get_convex(polygone[(i+1):(j+1)])
-        ans.append(polygone[j:]+polygone[:(i+2)])
+        ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
     return ans
 
 
@@ -95,6 +95,6 @@ def simplify(lobstacles, objet):
         lconvexe.extend(get_convex(polygone))
     #la liste des obstacles est maintenant la liste des polygones convexes
     print("ici", lconvexe)
-    p = [sum_Minkowski(polygone,objet) for polygone in lconvexe]
+    p = []#[sum_Minkowski(polygone,objet) for polygone in lconvexe]
     print("ok")
-    return p
+    return p, lconvexe

@@ -2,42 +2,68 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.uic import loadUiType
 import sys
+from colorsys import hsv_to_rgb
 
+from random import randint
 from simplify import simplify
 
 EL_SIZE = 15
+LEN = 100000
 
-class Step:
-    def __init__(self, parent = None):
+class Step(QObject):
+    stateChanged = pyqtSignal()
+    def __init__(self, name = "Étape i", image = "tracer.png", parent = None):
+        super().__init__()
+        self.isValidConfig = lambda *conf : True
+        self.transform = lambda *conf : (conf,[])
         self.nextSteps = []
         self.parent = parent
         if parent:
             parent.nextSteps.append(self)
-        self.name = "Étape i"
-        self.image = "tracer.png"
+        self.name = name
+        self.image = image
+        self.nextStep = None
 
-    def changeState(self, a):
-        if a and self.parent:
-            for step in self.parent.nextSteps:
-                if(step==self):
-                    step.setActive(True)
-                else:
-                    step.button.setChecked(False)
-        else:
-            self.setActive(a)
-        self.button.parent().update()
+    def setEnabled(self, e):
+        if not e:
+            for i in self.nextSteps:
+                i.setEnabled(e)
+        elif self.button.isChecked():
+            for step in self.nextSteps:
+                step.setEnabled(True)
+        self.button.setEnabled(e)
+        
         
     def setActive(self, a):
+        self.button.setChecked(a)
         if a:
+            if self.parent:
+                for i in filter(lambda a : a!=self, self.parent.nextSteps):
+                    i.setActive(False)
             for step in self.nextSteps:
-                step.button.setEnabled(True)
+                step.setEnabled(True)
         else:
             for step in self.nextSteps:
                 step.setActive(a)
-                step.button.setEnabled(False)
-                step.button.setChecked(False)
+                step.setEnabled(False)
+        self.stateChanged.emit()
+        if self.parent:
+            self.parent.nextStep = self if a else None
+            
+
+
+    def update(self, *conf):
+        if self.isValidConfig(*conf):
+            self.setEnabled(True)
+            if not self.button.isChecked():
+                return []
+            conf,items = self.transform(*conf)
+            return items + self.nextStep.update(*conf) if self.nextStep else []
+        self.setEnabled(False)
+
 
 class StepPainter(QWidget):
+    pipeLineChanged = pyqtSignal()
     def __init__(self, initStep, *args):
         super().__init__(*args)
         self.initStep = initStep
@@ -57,7 +83,9 @@ class StepPainter(QWidget):
                 but.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
                 but.setCheckable(True)
                 step.button = but
-                but.toggled.connect(step.changeState)
+                step.stateChanged.connect(self.update)
+                step.stateChanged.connect(lambda : self.pipeLineChanged.emit())
+                but.toggled.connect(step.setActive)
                 nextSteps += step.nextSteps
             if nextSteps:
                 addSteps(nextSteps)
@@ -83,6 +111,8 @@ class StepPainter(QWidget):
         drawRelation(self.initStep)
         pa.end()
         super().paintEvent(pe)
+
+
 
 
                                                 
@@ -160,6 +190,7 @@ class Controller(QGraphicsEllipseItem):
                 value.setY(min(rect.bottom(), max(value.y(), rect.top())))
         return value
 
+
 class Polygon(QGraphicsPolygonItem):
     def __init__(self, cts, *args):
         c = cts[0]
@@ -217,6 +248,7 @@ class Polygon(QGraphicsPolygonItem):
         return value
 
 class PolyScene(QGraphicsScene):
+    polyChanged = pyqtSignal()
     def __init__(self, *args):
         super().__init__(*args)
         self.scale = 1
@@ -254,6 +286,7 @@ class PolyScene(QGraphicsScene):
         self.controllers.append(ctrl)
         self.addItem(self.controllers[-1])
         ctrl.setPos(pos)
+        self.polyChanged.emit()
 
     def removeController(self, ctrl):
         self.setCurrentController(None)
@@ -262,6 +295,7 @@ class PolyScene(QGraphicsScene):
         self.controllers.remove(ctrl)
         self.removeItem(ctrl)
         self.controllerMoved()
+        self.polyChanged.emit()
 
     def setCurrentController(self, ctrl):
         if self.currentController:
@@ -272,6 +306,7 @@ class PolyScene(QGraphicsScene):
         self.updateDirectLine()
 
     def controllerMoved(self):
+        self.polyChanged.emit()
         for p in self.polygons:
             self.removeItem(p)
         self.polygons = []
@@ -287,49 +322,120 @@ class PolyScene(QGraphicsScene):
 
     def environment(self, LEN):
         return [[(int(LEN*p.x()/100), int(LEN*p.y()/100)) for p in i.polygon()] for i in self.polygons]
+
+    def clear(self):
+        for i in self.polygons:
+            self.removeItem(i)
+        self.polygons = []
+        for i in self.controllers:
+            self.removeItem(i)
+        self.removeItem(self.directLine)
+        self.directLine = None
+        self.currentController = None
+        self.controllers = []
+
+class EnvironmentScene(PolyScene):
+    def __init__(self,*args):
+        super().__init__(*args)
+        self.initialPos = None
+        self.finalPos = None
+
+    @pyqtSlot(list)
+    def setObject(self, polygon):
+        if self.initialPos:
+            self.removeItem(self.initialPos)
+            self.removeItem(self.finalPos)
+        if len(polygon) < 3:
+            self.initialPos = None
+            self.finalPos = None
+        else:
+            print(polygon)
+            self.initialPos = QGraphicsPolygonItem(QPolygonF([QPointF(p[0]*20/LEN+10,p[1]*20/LEN+10) for p in polygon]))
+            self.initialPos.setPen(QPen(Qt.NoPen))
+            self.initialPos.setBrush(QBrush(QColor(255,100,100)))
+            self.finalPos = QGraphicsPolygonItem(QPolygonF([QPointF(p[0]*20/LEN+90,p[1]*20/LEN+90) for p in polygon]))
+            self.finalPos.setPen(QPen(Qt.NoPen))
+            self.finalPos.setBrush(QBrush(QColor(100,255,100)))
+            self.initialPos.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.finalPos.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.initialPos.setZValue(60)
+            self.finalPos.setZValue(60)
+            self.addItem(self.initialPos)
+            self.addItem(self.finalPos)
+            
+class ObjectScene(PolyScene):
+    def __init__(self,*args):
+        super().__init__(*args)
+
+    def environment(self, l):
+        l = super().environment(l)
+        return l[0] if len(l) else []
+
         
-class Model:
-    def __init__(self):
-        self.object = []
-        self.envi = []#(10,10),(90,10),(90,90),(10,90)]#[(0,0), (0,1000),(1000,1000),(1000,0)]
-
-
-
 class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
         super().__init__(*args)
         self.setupUi(self)
         self.splitter_2.setSizes([300,150,150])
-        self.toolBar.addAction(self.actionQuitter)
-        self.splitter_3.setSizes([170,25])
+        self.toolBar.addAction(self.actionNouveau)
+        self.toolBar.addAction(self.actionOuvrir)
+        self.toolBar.addAction(self.actionEnregistrer)
+        self.toolBar.addAction(self.actionEnregistrerSous)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionAnnuler)
+        self.toolBar.addAction(self.actionRetablir)
+        self.splitter.setSizes([170,25])
+        l = QHBoxLayout()
+        l.setContentsMargins(0,1,0,0)
+        ##l.addWidget(QLabel("Bonjour"))
+        la = QLabel()
+        ##la.setAutoFillBackground(True)
+        la.setFrameShape(QFrame.HLine)
+        la.setFrameShadow(QFrame.Plain)
+        l.addWidget(la)
+        #p = QLabel("Environnement",self.splitter_2)
+        #f = p.font()
+        #f.setBold(True)
+        #f.setItalic(True)
+        #p.setFont(f)
+        #p.move(0,50)
+        #self.splitter_2.splitterMoved.connect(lambda e,i : p.move(0,e-p.height()//2))
+        #self.splitter_2.handle(1).setLayout(l)
+        #print(self.splitter_2.handle(1).paintEvent)
+        self.vue = []
         
         self.currentItem = None
-        self.model = Model()
-        self.drawEnvi = Step()
-        a = Step(self.drawEnvi)
-        Step(a)
-        a = Step(Step(a))
-        Step(a)
-        Step(a)
-        Step(a)
-        a=Step(Step(self.drawEnvi))
-        self.steps.setWidget(StepPainter(self.drawEnvi))
+
+        self.drawEnvi = Step("Décomposition en\npolygones convexes")
+        def val(*conf) :
+            if sum(map(len,conf[0]))%2:
+                return True
+            self.error(self.drawEnvi, "Nombre de sommets pair")
+            return False
+        self.drawEnvi.isValidConfig = val#lambda *conf : sum(map(len,conf[0]))%2
+        a = Step(parent = self.drawEnvi)
+        Step(parent = a)
+        a = Step(parent = Step(parent = a))
+        Step(parent = a)
+        Step(parent = a)
+        #Step(a)
+        a=(Step(parent = self.drawEnvi))
+        sp = StepPainter(self.drawEnvi)
+        sp.pipeLineChanged.connect(self.updatePipeLine)
+        self.steps.addWidget(sp)
 
         self.envi.setRenderHint(QPainter.Antialiasing)
-        it = QGraphicsPolygonItem()
-        it.setPolygon(QPolygonF([QPoint(*p) for p in self.model.envi]))
-        self.sc = PolyScene(self)
-        self.sc.view = self.envi
+        
+        self.environment = EnvironmentScene(self)
+        self.environment.view = self.envi
 
-        self.object = PolyScene(self)
+        self.object = ObjectScene(self)
         self.obj.setScene(self.object)
         self.object.view = self.obj
-        #self.sc.addItem(it)
+        #self.environment.addItem(it)
 
-        # BUG de Qt (Il faudrait utiliser 5...)
-        self.actionProposQt.triggered.connect(self.on_actionProposDeQt_triggered, Qt.UniqueConnection)
 
-        self.envi.setScene(self.sc)
+        self.envi.setScene(self.environment)
         def wheelEvent(view):
             def wheelEvent(we):
                 if we.modifiers() & Qt.ControlModifier:
@@ -352,29 +458,80 @@ class Main(*loadUiType("planification.ui")):
 
         QTimer.singleShot(20, lambda : self.envi.scale(min(self.envi.width()/120, self.envi.height()/120),
                                                        min(self.envi.width()/120, self.envi.height()/120)))
+        QTimer.singleShot(20, lambda : self.obj.scale(min(self.obj.width()/120, self.obj.height()/120),
+                                                       min(self.obj.width()/120, self.obj.height()/120)))
+
+        #self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
+        self.environment.polyChanged.connect(self.updatePipeLine)
+        self.object.polyChanged.connect(self.updateObject)
         #self.envi.setSceneRect(QRectF(-10,-10,120,120))
         #self.obj.setSceneRect(QRectF(-10,-10,120,120))
        
 
 
+    @pyqtSlot()
     def on_actionNouveau_triggered(self):
-        pass
+        self.object.clear()
+
+    @pyqtSlot()
+    def on_actionClearEnvironment_triggered(self):
+        self.environment.clear()
     
+    @pyqtSlot()
     def on_actionQuitter_triggered(self):
         self.close()
 
-    def on_actionProposDeQt_triggered(self):
+    @pyqtSlot()
+    def on_actionProposQt_triggered(self):
         QMessageBox.aboutQt(self,"À propos de Qt")
 
+    @pyqtSlot()
     def on_actionSimplifier_triggered(self):
-        LEN = 100
+        e = self.environment.environment(LEN)
         o = self.object.environment(LEN)[0]
         m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
-        for p in simplify(self.sc.environment(LEN), o):
-            self.sc.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
+        for po in e:
+            ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
+            if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
+                (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
+                po.reverse()
+        poly, conv = simplify(e, o)
+        print(len(conv))
+        m = [0,0]
+        for i in self.vue:
+            self.environment.removeItem(i)
+        self.vue = []
+        for i,p in enumerate(conv):
+            rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
+            self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
+                               QPen(QColor(0,0,0,0)),
+                               QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
+        
+        #for p in poly:
+        #    self.environment.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
 
     def setModel(self, model):
         pass
+
+
+    @pyqtSlot()
+    def updateObject(self):
+        self.environment.setObject(self.object.environment(LEN))
+
+    
+    @pyqtSlot()
+    def updatePipeLine(self):
+        self.drawEnvi.update(self.environment.environment(LEN))
+
+    @pyqtSlot()
+    def on_actionClearConsole_triggered(self):
+        self.textEdit.clear()
+        
+    def error(self, obj, arg):
+        self.textEdit.append("<font color=\"Blue\">"+QTime.currentTime().toString() +
+                             "</font> <b><font color=\"Red\">Erreur</font></b> " +
+                             obj.name.replace('\n', ' '))
+        self.textEdit.append("    "+arg)
 
 app = QApplication(sys.argv)
 fen = Main()

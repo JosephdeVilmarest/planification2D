@@ -7,142 +7,209 @@
     <x>0</x>
     <y>0</y>
     <width>1075</width>
-    <height>746</height>
+    <height>824</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QSplitter" name="splitter_4">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,1">
+    <item>
+     <layout class="QGridLayout" name="steps"/>
+    </item>
+    <item>
+     <widget class="Line" name="line">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QFrame" name="frame">
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <widget class="QScrollArea" name="steps">
-          <property name="frameShape">
-           <enum>QFrame::NoFrame</enum>
-          </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="scrollAreaWidgetContents">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>265</width>
-             <height>683</height>
-            </rect>
-           </property>
-          </widget>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QSplitter" name="splitter_3">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <widget class="QGraphicsView" name="envi">
-        <property name="palette">
-         <palette>
-          <active>
-           <colorrole role="Base">
-            <brush brushstyle="SolidPattern">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </active>
-          <inactive>
-           <colorrole role="Base">
-            <brush brushstyle="SolidPattern">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </inactive>
-          <disabled>
-           <colorrole role="Base">
-            <brush brushstyle="SolidPattern">
-             <color alpha="255">
-              <red>244</red>
-              <green>244</green>
-              <blue>244</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </disabled>
-         </palette>
-        </property>
-       </widget>
-       <widget class="QSplitter" name="splitter_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <widget class="QWidget" name="widget" native="true"/>
-        <widget class="QGraphicsView" name="obj">
-         <property name="palette">
-          <palette>
-           <active>
-            <colorrole role="Base">
-             <brush brushstyle="SolidPattern">
-              <color alpha="0">
-               <red>255</red>
-               <green>255</green>
-               <blue>255</blue>
-              </color>
-             </brush>
-            </colorrole>
-           </active>
-           <inactive>
-            <colorrole role="Base">
-             <brush brushstyle="SolidPattern">
-              <color alpha="0">
-               <red>255</red>
-               <green>255</green>
-               <blue>255</blue>
-              </color>
-             </brush>
-            </colorrole>
-           </inactive>
-           <disabled>
-            <colorrole role="Base">
-             <brush brushstyle="SolidPattern">
-              <color alpha="255">
-               <red>244</red>
-               <green>244</green>
-               <blue>244</blue>
-              </color>
-             </brush>
-            </colorrole>
-           </disabled>
-          </palette>
-         </property>
-        </widget>
-       </widget>
-      </widget>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QSplitter" name="splitter">
+    <item>
+     <widget class="QSplitter" name="splitter_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
+      <widget class="QWidget" name="gridLayoutWidget">
+       <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0" columnstretch="0,1">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <italic>true</italic>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="text">
+           <string>Environnement</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_3">
+          <property name="frameShape">
+           <enum>QFrame::HLine</enum>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QGraphicsView" name="envi">
+          <property name="palette">
+           <palette>
+            <active>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="0">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </active>
+            <inactive>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="0">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </inactive>
+            <disabled>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>244</red>
+                <green>244</green>
+                <blue>244</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </disabled>
+           </palette>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="childrenCollapsible">
+        <bool>false</bool>
+       </property>
+       <widget class="QWidget" name="widget" native="true">
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QTextEdit" name="textEdit">
+           <property name="font">
+            <font>
+             <family>Monospace</family>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="gridLayoutWidget_2">
+        <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0" columnstretch="0,1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <italic>true</italic>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Objet</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="frameShape">
+            <enum>QFrame::VLine</enum>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" rowspan="2">
+          <widget class="QGraphicsView" name="obj">
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="0">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="0">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>244</red>
+                 <green>244</green>
+                 <blue>244</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -174,8 +241,10 @@
     <addaction name="actionAnnuler"/>
     <addaction name="actionRetablir"/>
     <addaction name="separator"/>
-    <addaction name="actionR_initialiser_l_environnement"/>
-    <addaction name="actionR_initialiser_l_objet"/>
+    <addaction name="actionClearEnvironment"/>
+    <addaction name="actionClearObject"/>
+    <addaction name="separator"/>
+    <addaction name="actionClearConsole"/>
    </widget>
    <widget class="QMenu" name="menuAide">
     <property name="title">
@@ -190,7 +259,7 @@
    </widget>
    <widget class="QMenu" name="menuPlannification">
     <property name="title">
-     <string>Plannification</string>
+     <string>&amp;Plannification</string>
     </property>
     <addaction name="actionSimplifier"/>
    </widget>
@@ -219,7 +288,9 @@
   </widget>
   <action name="actionNouveau">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Nouveau</string>
@@ -230,7 +301,9 @@
   </action>
   <action name="actionQuitter">
    <property name="icon">
-    <iconset theme="application-exit"/>
+    <iconset theme="application-exit">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Quitter</string>
@@ -241,7 +314,9 @@
   </action>
   <action name="actionOuvrir">
    <property name="icon">
-    <iconset theme="document-open"/>
+    <iconset theme="document-open">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Ouvrir</string>
@@ -252,7 +327,9 @@
   </action>
   <action name="actionEnregistrer">
    <property name="icon">
-    <iconset theme="document-save"/>
+    <iconset theme="document-save">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Enregistrer</string>
@@ -263,7 +340,9 @@
   </action>
   <action name="actionEnregistrerSous">
    <property name="icon">
-    <iconset theme="document-save-as"/>
+    <iconset theme="document-save-as">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Enregistrer &amp;sous</string>
@@ -273,11 +352,17 @@
    </property>
   </action>
   <action name="actionPropos">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>À p&amp;ropos</string>
    </property>
   </action>
   <action name="actionAideContextuelle">
+   <property name="icon">
+    <iconset theme="help-contents"/>
+   </property>
    <property name="text">
     <string>&amp;Aide contextuelle</string>
    </property>
@@ -286,6 +371,10 @@
    </property>
   </action>
   <action name="actionPreferences">
+   <property name="icon">
+    <iconset>
+     <normaloff>options.png</normaloff>options.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Préférences</string>
    </property>
@@ -294,13 +383,18 @@
    </property>
   </action>
   <action name="actionProposQt">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>À propos de &amp;Qt</string>
    </property>
   </action>
   <action name="actionAnnuler">
    <property name="icon">
-    <iconset theme="edit-undo"/>
+    <iconset theme="edit-undo">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Annuler</string>
@@ -311,7 +405,9 @@
   </action>
   <action name="actionRetablir">
    <property name="icon">
-    <iconset theme="edit-redo"/>
+    <iconset theme="edit-redo">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Rétablir</string>
@@ -328,14 +424,31 @@
     <string>F5</string>
    </property>
   </action>
-  <action name="actionR_initialiser_l_environnement">
+  <action name="actionClearEnvironment">
+   <property name="icon">
+    <iconset theme="edit-clear"/>
+   </property>
    <property name="text">
     <string>Réinitialiser l'environnement</string>
    </property>
   </action>
-  <action name="actionR_initialiser_l_objet">
+  <action name="actionClearObject">
+   <property name="icon">
+    <iconset theme="edit-clear"/>
+   </property>
    <property name="text">
     <string>Réinitialiser l'objet</string>
+   </property>
+  </action>
+  <action name="actionClearConsole">
+   <property name="icon">
+    <iconset theme="edit-clear"/>
+   </property>
+   <property name="text">
+    <string>Nettoyer la console</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>
