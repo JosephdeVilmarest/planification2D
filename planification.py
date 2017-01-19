@@ -107,9 +107,9 @@ class StepPainter(QWidget):
                 pa.drawLine(step.button.pos() + QPoint(step.button.width()//2,step.button.height()//2),
                             nextStep.button.pos() + QPoint(step.button.width()//2,step.button.height()//2))
                 drawRelation(nextStep)
-        pa.begin(self)
+        #pa.begin(self)
         drawRelation(self.initStep)
-        pa.end()
+        #pa.end()
         super().paintEvent(pe)
 
 
@@ -306,7 +306,6 @@ class PolyScene(QGraphicsScene):
         self.updateDirectLine()
 
     def controllerMoved(self):
-        self.polyChanged.emit()
         for p in self.polygons:
             self.removeItem(p)
         self.polygons = []
@@ -314,6 +313,7 @@ class PolyScene(QGraphicsScene):
         while len(cts):
             self.polygons.append(Polygon(cts))
             self.addItem(self.polygons[-1])
+        self.polyChanged.emit()
             
     def keyPressEvent(self, ke):
         if ke.key() == Qt.Key_Escape:
@@ -461,13 +461,12 @@ class Main(*loadUiType("planification.ui")):
         QTimer.singleShot(20, lambda : self.obj.scale(min(self.obj.width()/120, self.obj.height()/120),
                                                        min(self.obj.width()/120, self.obj.height()/120)))
 
-        #self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
-        self.environment.polyChanged.connect(self.updatePipeLine)
-        self.object.polyChanged.connect(self.updateObject)
+        self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
+#        self.environment.polyChanged.connect(self.updatePipeLine)
+        #self.object.polyChanged.connect(self.updateObject)
         #self.envi.setSceneRect(QRectF(-10,-10,120,120))
         #self.obj.setSceneRect(QRectF(-10,-10,120,120))
        
-
 
     @pyqtSlot()
     def on_actionNouveau_triggered(self):
@@ -488,7 +487,9 @@ class Main(*loadUiType("planification.ui")):
     @pyqtSlot()
     def on_actionSimplifier_triggered(self):
         e = self.environment.environment(LEN)
-        o = self.object.environment(LEN)[0]
+        o = self.object.environment(LEN)
+        
+        
         m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
         for po in e:
             ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
@@ -501,10 +502,11 @@ class Main(*loadUiType("planification.ui")):
         for i in self.vue:
             self.environment.removeItem(i)
         self.vue = []
+        print(conv)
         for i,p in enumerate(conv):
             rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
             self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
-                               QPen(QColor(0,0,0,0)),
+                               QPen(QColor(0,0,0,255)),
                                QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
         
         #for p in poly:
@@ -532,6 +534,10 @@ class Main(*loadUiType("planification.ui")):
                              "</font> <b><font color=\"Red\">Erreur</font></b> " +
                              obj.name.replace('\n', ' '))
         self.textEdit.append("    "+arg)
+
+def convex(p):
+    l = [p]
+    return [QGraphicsPolygonItem(QPolygonF([QPointF(*i) for i in p])) for p in l],l
 
 app = QApplication(sys.argv)
 fen = Main()
