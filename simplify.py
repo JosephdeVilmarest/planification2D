@@ -1,43 +1,78 @@
 from math import sqrt, atan2
 
+def interieur(polygone, point):
+    m=len(polygone)
+    #je teste si le point est a gauche de chaque arete orientee du polygone
+    for i in range(m):
+        if ((point[0]-polygone[i][0])*(polygone[i][1]-polygone[(i+1)%m][1])+
+            (point[1]-polygone[i][1])*(polygone[(i+1)%m][0]-polygone[i][0])
+                                <=0):
+            return False
+    return True
+
+def is_angle_convex(p1,p2,p3):
+    return ((p3[1]-p2[1])*(p2[0]-p1[0])-(p3[0]-p2[0])*(p2[1]-p1[1])>=0)
+
 def get_convex(polygone):
     #on renvoie une liste de polygones convexes dont 
-    #l'union (disjointe) est égale au polygone de départ
-    #à compléter: pour l'instant on prend des polygones convexes ^^
+    #l'union (disjointe) est egale au polygone de depart
+    #à completer: pour l'instant on prend des polygones convexes ^^
     n=len(polygone)
     i=0
-    while ((polygone[(i+1)%n][1]-polygone[i][1])*
-                (polygone[(i+2)%n][0]-polygone[(i+1)%n][0])-
-           (polygone[(i+1)%n][0]-polygone[i][0])*
-                (polygone[(i+2)%n][1]-polygone[(i+1)%n][1])>0):
-        #on trouve un premier "point convexe"
-        i+=1
-    i0=i
-    i+=1
-    while ((polygone[(i+1)%n][1]-polygone[i][1])*
-                (polygone[(i+2)%n][0]-polygone[(i+1)%n][0])-
-           (polygone[(i+1)%n][0]-polygone[i][0])*
-                (polygone[(i+2)%n][1]-polygone[(i+1)%n][1])<0) and (i!=i0):
-        #on trouve un "point concave" s'il existe
+    while True:
+        while not(is_angle_convex(polygone[i],
+                polygone[(i+1)%n],polygone[(i+2)%n])):
+            #on trouve un premier "point convexe"
+            i=(i+1)%n
+        i0=i
         i=(i+1)%n
-    if (i==i0):
-        #le polygone est convexe
-        return [polygone]
-    j=(i-1)%n
-    while ((polygone[(i+1)%n][1]-polygone[i][1])*
-                (polygone[j][0]-polygone[(i+1)%n][0])-
-           (polygone[(i+1)%n][0]-polygone[i][0])*
-                (polygone[j][1]-polygone[(i+1)%n][1])<0):
-        #on cherche un grand sous-polygone-convexe
-        j=(j-1)%n
-    j=(j+1)%n
-    if j<i+1:
-        ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
-        ans.extend(get_convex(polygone[j:(i+2)]))
-    else:
-        ans=get_convex(polygone[(i+1):(j+1)])
-        ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
-    return ans
+        while is_angle_convex(polygone[i],
+                polygone[(i+1)%n],polygone[(i+2)%n]) and (i!=i0):
+            #on trouve un "point concave" s'il existe
+            i=(i+1)%n
+        print("i vaut", i)
+        if (i==i0):
+            #le polygone est convexe
+            print("le polygone est convexe",polygone)
+            return [polygone]
+        j=(i-1)%n
+        flag=True
+        while is_angle_convex(polygone[i],
+                polygone[(i+1)%n],polygone[j]) and flag and (j!=i):
+            #on cherche un grand sous-polygone convexe
+            print(j)
+            if j<(i+1)%n:
+                pol=polygone[j:(i+2)]
+                for k in range(j):
+                    if interieur(pol,polygone[k]):
+                        flag=False
+                for k in range(i+2,n):
+                    if interieur(pol,polygone[k]):
+                        flag=False
+            else:
+                pol=polygone[j:]+polygone[:(i+2)]
+                for k in range(i+2,j):
+                    if interieur(pol,polygone[k]):
+                        flag=False
+            j=(j-1)%n
+
+        j=(j+1)%n
+        if not(flag):
+            j=(j+1)%n
+        print("j vaut ",j)
+
+        if j==(i-1)%n:
+            #on n'a qu'un segment
+            i+=1
+
+        else:
+            if j<(i+1)%n:
+                ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
+                ans.extend(get_convex(polygone[j:(i+2)]))
+            else:
+                ans=get_convex(polygone[(i+1)%n:(j+1)])
+                ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
+            return ans
 
 def get_convex(polygon):
     def best(p):

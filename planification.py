@@ -247,6 +247,43 @@ class Polygon(QGraphicsPolygonItem):
             value.setY(value.y() + dpy + dmy)
         return value
 
+
+class PolygonPos(QGraphicsPolygonItem):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
+
+    def mousePressEvent(self, me):
+        if me.buttons() & Qt.LeftButton:
+            self.setCursor(Qt.ClosedHandCursor)
+        super().mousePressEvent(me)
+        
+
+    def mouseMoveEvent(self, me):
+        super().mouseMoveEvent(me)
+
+    def mouseReleaseEvent(self, me):
+        self.setCursor(Qt.ArrowCursor)
+        super().mouseReleaseEvent(me)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionChange:
+            rect = QRect(0,0,100,100)
+            dpx = 0
+            dpy = 0
+            dmx = 0
+            dmy = 0
+            for c in self.polygon():
+                dpx = max(dpx, rect.left()-c[1].x()-value.x())
+                dpy = max(dpy, rect.top()-c[1].y()-value.y())
+                dmx = min(dmx, rect.right()-c[1].x()-value.x())
+                dmy = min(dmy, rect.bottom()-c[1].y()-value.y())
+            value.setX(value.x() + dpx + dmx)
+            value.setY(value.y() + dpy + dmy)
+        return value
+
+
 class PolyScene(QGraphicsScene):
     polyChanged = pyqtSignal()
     def __init__(self, *args):
@@ -350,17 +387,16 @@ class EnvironmentScene(PolyScene):
             self.finalPos = None
         else:
             print(polygon)
-            self.initialPos = QGraphicsPolygonItem(QPolygonF([QPointF(p[0]*20/LEN+10,p[1]*20/LEN+10) for p in polygon]))
+            self.initialPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN+10,p[1]*20/LEN+10) for p in polygon]))
             self.initialPos.setPen(QPen(Qt.NoPen))
             self.initialPos.setBrush(QBrush(QColor(255,100,100)))
-            self.finalPos = QGraphicsPolygonItem(QPolygonF([QPointF(p[0]*20/LEN+90,p[1]*20/LEN+90) for p in polygon]))
+            self.initialPos.setZValue(60)
+            self.initialPos.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.addItem(self.initialPos)
+            self.finalPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN+90,p[1]*20/LEN+90) for p in polygon]))
             self.finalPos.setPen(QPen(Qt.NoPen))
             self.finalPos.setBrush(QBrush(QColor(100,255,100)))
-            self.initialPos.setFlag(QGraphicsItem.ItemIsMovable, True)
-            self.finalPos.setFlag(QGraphicsItem.ItemIsMovable, True)
-            self.initialPos.setZValue(60)
             self.finalPos.setZValue(60)
-            self.addItem(self.initialPos)
             self.addItem(self.finalPos)
             
 class ObjectScene(PolyScene):
@@ -462,7 +498,11 @@ class Main(*loadUiType("planification.ui")):
                                                        min(self.obj.width()/120, self.obj.height()/120)))
 
         self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
+<<<<<<< HEAD
 #        self.environment.polyChanged.connect(self.updatePipeLine)
+=======
+        #self.environment.polyChanged.connect(self.updatePipeLine)
+>>>>>>> ac81f7181cfb1f7382692979c0fc973ec8fbc32b
         #self.object.polyChanged.connect(self.updateObject)
         #self.envi.setSceneRect(QRectF(-10,-10,120,120))
         #self.obj.setSceneRect(QRectF(-10,-10,120,120))
@@ -486,16 +526,21 @@ class Main(*loadUiType("planification.ui")):
 
     @pyqtSlot()
     def on_actionSimplifier_triggered(self):
+        print("Bonjour !")
         e = self.environment.environment(LEN)
         o = self.object.environment(LEN)
+<<<<<<< HEAD
         
         
+=======
+>>>>>>> ac81f7181cfb1f7382692979c0fc973ec8fbc32b
         m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
         for po in e:
             ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
             if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
                 (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
                 po.reverse()
+        print("Je m'en vais")
         poly, conv = simplify(e, o)
         print(len(conv))
         m = [0,0]
@@ -508,7 +553,7 @@ class Main(*loadUiType("planification.ui")):
             self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
                                QPen(QColor(0,0,0,255)),
                                QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
-        
+        print("Au revoir")
         #for p in poly:
         #    self.environment.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
 
