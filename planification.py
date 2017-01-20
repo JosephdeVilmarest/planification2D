@@ -16,11 +16,12 @@ def ptsToPoly(p,LEN):
 
 class Step(QObject):
     stateChanged = pyqtSignal()
-    def __init__(self, parent = None,
+    def __init__(self, output, parent = None,
                  validation = standardValidation,
                  transformation = standardTransformation,
                  name = "Étape", image = "tracer.png",):
         super().__init__()
+        self.output = output
         self.validation = validation
         self.transformation = transformation
         self.nextSteps = []
@@ -60,12 +61,17 @@ class Step(QObject):
 
 
     def update(self, *conf):
-        if self.validation(*conf):
+        m = self.validation(*conf)
+        if not len(m):
             self.setEnabled(True)
             if not self.button.isChecked():
                 return []
             conf,items = self.transformation(*conf)
+            for c in self.nextSteps:
+                if c != self.nextStep:
+                    c.update(*conf)
             return items + (self.nextStep.update(*conf) if self.nextStep else [])
+        self.output.error(self, m)
         self.setEnabled(False)
         return []
 
@@ -266,6 +272,7 @@ class PolygonPos(QGraphicsPolygonItem):
     def mousePressEvent(self, me):
         if me.buttons() & Qt.LeftButton:
             self.setCursor(Qt.ClosedHandCursor)
+        self.setZValue(61)
         super().mousePressEvent(me)
         
 
@@ -274,6 +281,7 @@ class PolygonPos(QGraphicsPolygonItem):
 
     def mouseReleaseEvent(self, me):
         self.setCursor(Qt.ArrowCursor)
+        self.setZValue(60)
         super().mouseReleaseEvent(me)
 
     def itemChange(self, change, value):
@@ -417,14 +425,14 @@ class EnvironmentScene(PolyScene):
             x /= len(polygon)
             y /= len(polygon)
             self.initialPos = PolygonPos(QPolygonF([QPointF((p[0]-x)*20/LEN,(p[1]-y)*20/LEN) for p in polygon]))
-            self.initialPos.setPen(QPen(Qt.NoPen))
-            self.initialPos.setBrush(QBrush(QColor(255,100,100)))
+            self.initialPos.setPen(QPen())
+            self.initialPos.setBrush(QBrush(QColor(255,150,150)))
             self.initialPos.setZValue(60)
             self.initialPos.setPos(QPointF(pi))
             self.addItem(self.initialPos)
             self.finalPos = PolygonPos(QPolygonF([QPointF((p[0]-x)*20/LEN,(p[1]-y)*20/LEN) for p in polygon]))
-            self.finalPos.setPen(QPen(Qt.NoPen))
-            self.finalPos.setBrush(QBrush(QColor(100,255,100)))
+            self.finalPos.setPen(QPen())
+            self.finalPos.setBrush(QBrush(QColor(150,255,150)))
             self.finalPos.setZValue(60)
             self.finalPos.setPos(QPointF(pf))
             self.addItem(self.finalPos)
@@ -495,23 +503,19 @@ class Main(*loadUiType("planification.ui")):
         
         self.currentItem = None
 
-        self.drawEnvi = Step(None, convexDecompositionValidation,
-                             convexDecompositionTransformation,
-                             "Décomposition en\npolygones convexes")
-        def val(*conf) :
-            if sum(map(len,conf[0]))%2:
-                return True
-            self.error(self.drawEnvi, "Nombre de sommets pair")
-            return False
-        self.drawEnvi.isValidConfig = val#lambda *conf : sum(map(len,conf[0]))%2
-        a = Step(parent = self.drawEnvi)
-        Step(parent = a)
-        a = Step(parent = Step(parent = a))
-        Step(parent = a)
-        Step(parent = a)
+        self.convDecomp = Step(self, None, convexDecompositionValidation,
+                               convexDecompositionTransformation,
+                               "Décomposition en\npolygones convexes")
+        a = Step(self, self.convDecomp, minkovskySumValidation,
+                 minkovskySumTransformation,
+                 "Somme de\nMinkovsky")
+        Step(self, parent = a)
+        a = Step(self, parent = Step(self, parent = a))
+        Step(self, parent = a)
+        Step(self, parent = a)
         #Step(a)
-        a=(Step(parent = self.drawEnvi))
-        sp = StepPainter(self.drawEnvi)
+        a=(Step(self, parent = self.convDecomp))
+        sp = StepPainter(self.convDecomp)
         sp.pipeLineChanged.connect(self.updatePipeLine)
         self.steps.addWidget(sp)
 
@@ -618,26 +622,26 @@ class Main(*loadUiType("planification.ui")):
     @pyqtSlot()
     def updateObject(self):
         self.environment.setObject(self.object.environment(LEN))
+        self.updatePipeLine()
 
     
     @pyqtSlot()
     def updatePipeLine(self):
+        self.messages.setText("")
         for i in self.vue:
             self.environment.removeItem(i)
         self.vue = []
-        for i in self.drawEnvi.update(self.environment.environment(LEN)):            self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
+        for i in self.convDecomp.update(self.environment.environment(LEN),
+                                        self.object.environment(LEN)):
+            self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
                                                         QPen(QColor(*i[1])),
                                                         QBrush(QColor(*i[1]))))
 
-    @pyqtSlot()
-    def on_actionClearConsole_triggered(self):
-        self.textEdit.clear()
+
         
     def error(self, obj, arg):
-        self.textEdit.append("<font color=\"Blue\">"+QTime.currentTime().toString() +
-                             "</font> <b><font color=\"Red\">Erreur</font></b> " +
-                             obj.name.replace('\n', ' '))
-        self.textEdit.append("    "+arg)
+        self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
+                             obj.name.replace('\n', ' ')+"</font><br> &#160;&#160;&#160;&#160;"+arg)
 
     @pyqtSlot()
     def on_actionOuvrir_triggered(self):

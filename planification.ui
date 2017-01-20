@@ -118,16 +118,14 @@
        <widget class="QWidget" name="widget" native="true">
         <layout class="QGridLayout" name="gridLayout">
          <item row="0" column="0">
-          <widget class="QTextEdit" name="textEdit">
-           <property name="font">
-            <font>
-             <family>Monospace</family>
-            </font>
+          <widget class="QLabel" name="messages">
+           <property name="text">
+            <string/>
            </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+           <property name="alignment">
+            <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
            </property>
-           <property name="readOnly">
+           <property name="wordWrap">
             <bool>true</bool>
            </property>
           </widget>
@@ -244,7 +242,6 @@
     <addaction name="actionClearEnvironment"/>
     <addaction name="actionClearObject"/>
     <addaction name="separator"/>
-    <addaction name="actionClearConsole"/>
    </widget>
    <widget class="QMenu" name="menuAide">
     <property name="title">

@@ -1,8 +1,13 @@
 from simplify import *
 from colorsys import hsv_to_rgb
+from math import atan2
 
 def standardValidation(*conf):
-    return True
+    """ Renvoie
+        - "" si la configuration est valide
+        - Un message d'erreur sinon
+    """
+    return ""
 
 def standardTransformation(*conf):
     """ Renvoie
@@ -16,15 +21,11 @@ def standardTransformation(*conf):
 ########### Décomposition en convexes ############
 # Suppose l'environement dans le sens trigo
 def convexDecompositionValidation(environment, *conf):
-    if not len(environment): return False
+    if not len(environment): return "Environnement vide"
     for p in environment:
-        l = len(p)
-        if l > 2:
-            for i in range(2,l):
-                for j in range((i==l-1),i-1):
-                    if segmentsIntersect(p[i],p[i-l+1],p[j],p[j+1]):
-                        return False
-    return True
+        if polyIsCrossed(p):
+            return "Polygone(s) de l'environnement croisé(s)"
+    return ""
 
 def convexDecompositionTransformation(environment, *conf):
     envi = convexDecomposition(environment)
@@ -39,8 +40,16 @@ def convexDecompositionTransformation(environment, *conf):
 ########### Somme de Minkovsky ############
 # Suppose l'environement convexe
 def minkovskySumValidation(environment, object, *conf):
-    # Vérif object convexe
-    return True
+    if len(object) < 3: return ""
+    if polyIsCrossed(object):
+        return "Polygone object croisé"
+    angle = lambda i,j : atan2(object[j][0]-object[i][0],object[j][1]-object[i][1])
+    a = 0
+    p0 = 0
+    for i in range(0,len(object)):
+        if det(object[i-2], object[i-1], object[i]) > 0 :
+            return "Polygone object non convexe"
+    return ""
 
 def minkovskySumTransformation(environment, object, *conf):
     return [],[]

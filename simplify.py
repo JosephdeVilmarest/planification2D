@@ -18,6 +18,14 @@ def segmentsIntersect(a,b, c,d):
     return (det(a,c,b)*det(b,d,a) > 0 and det(c,a,d)*det(d,b,c) > 0) or (
                 segmentContains(a,b, c) or segmentContains(a,b, d) or
                 segmentContains(b,c, a) or segmentContains(b,c, b)) 
+def polyIsCrossed(p):
+    l = len(p)
+    if l > 2:
+        for i in range(2,l):
+            for j in range((i==l-1),i-1):
+                if segmentsIntersect(p[i],p[i-l+1],p[j],p[j+1]):
+                    return True
+
 
 def interieur(polygone, point):
     m=len(polygone)
