@@ -95,12 +95,15 @@ def get_convex(polygon):
         l = len(polygon)
         if (i+1)%l == j:return False
         det = lambda i,j,k : (i[0]-j[0])*(k[1]-j[1])-(i[1]-j[1])*(k[0]-j[0])
+        proj = lambda i,j,k : (i[0]-j[0])*(k[0]-j[0])+(i[1]-j[1])*(k[1]-j[1])
         for k in range(l):
-            if (det(polygon[i], polygon[k], polygon[j])*
-                det(polygon[j], polygon[k-1], polygon[i]) > 0 and
-                det(polygon[k], polygon[i], polygon[k-1])*
-                det(polygon[k-1], polygon[j], polygon[k]) > 0):
-                print(i,j,"-", k,polygon[i],polygon[j],polygon[k],polygon[k-1])
+            if ((not k in [i,j] and det(polygon[i], polygon[k], polygon[j]) == 0 and
+                 proj(polygon[i], polygon[k], polygon[j]) < 0) or
+                (det(polygon[i], polygon[k], polygon[j])*
+                 det(polygon[j], polygon[k-1], polygon[i]) > 0 and
+                 det(polygon[k], polygon[i], polygon[k-1])*
+                 det(polygon[k-1], polygon[j], polygon[k]) > 0)):
+                #print(i,j,"-", k,polygon[i],polygon[j],polygon[k],polygon[k-1])
                 return False
         a1 = atan2(polygon[i-1][0]-polygon[i][0],polygon[i-1][1]-polygon[i][1])
         a2 = atan2(polygon[(i+1)%l][0]-polygon[i][0],polygon[(i+1)%l][1]-polygon[i][1])
@@ -110,7 +113,7 @@ def get_convex(polygon):
         return a3<a2
     l = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i-1) if coupe(i,j)]
     connus = {}
-    print("")
+    #print("")
     return l#best(tuple(polygone))[0]
 
 

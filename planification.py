@@ -223,6 +223,7 @@ class Polygon(QGraphicsPolygonItem):
         p = self.pos()
         for c in self.ctrl:
             c[0].setPos(c[1]+p, True)
+        self.scene().polyMoved()
 
     def mouseReleaseEvent(self, me):
         self.setCursor(Qt.ArrowCursor)
@@ -304,7 +305,7 @@ class PolyScene(QGraphicsScene):
         if self.currentController:
             self.directLine = QGraphicsLineItem(QLineF(self.currentController.pos(),
                                                        self.currentController.next.pos()))
-            self.directLine.setPen(QPen(QColor(0,0,255)))
+            self.directLine.setPen(QPen(QColor(255,0,0)))
             self.directLine.setZValue(-.5)
             self.addItem(self.directLine)
 
@@ -314,7 +315,6 @@ class PolyScene(QGraphicsScene):
         if not self.itemAt(me.scenePos(), self.view.transform()) in [None, self.rect]:
             super().mousePressEvent(me)
             return
-        print("ajout")
         self.addController(me.scenePos())
         super().mousePressEvent(me)
 
@@ -333,6 +333,7 @@ class PolyScene(QGraphicsScene):
         self.removeItem(ctrl)
         self.controllerMoved()
         self.polyChanged.emit()
+        self.updateDirectLine()
 
     def setCurrentController(self, ctrl):
         if self.currentController:
@@ -341,6 +342,9 @@ class PolyScene(QGraphicsScene):
         if self.currentController:
             self.currentController.setCurrent(True)
         self.updateDirectLine()
+
+    def polyMoved(self):
+        self.polyChanged.emit()
 
     def controllerMoved(self):
         for p in self.polygons:
@@ -358,7 +362,7 @@ class PolyScene(QGraphicsScene):
 
 
     def environment(self, LEN):
-        return [[(int(LEN*p.x()/100), int(LEN*p.y()/100)) for p in i.polygon()] for i in self.polygons]
+        return [[(int(LEN*p[0].x()/100), int(LEN*p[0].y()/100)) for p in i.ctrl] for i in self.polygons]
 
     def clear(self):
         for i in self.polygons:
@@ -382,32 +386,31 @@ class EnvironmentScene(PolyScene):
         pi = QPointF(20,20)
         pf = QPointF(80,80)
         if self.initialPos:
+            pi = self.initialPos.pos()
             self.removeItem(self.initialPos)
-            p = self.initialPos.polygon()
-            pi = QPointF()
-            for i in p : pi += i
-            pi /= len(p)
+            pf = self.finalPos.pos()
             self.removeItem(self.finalPos)
-            p = self.finalPos.polygon()
-            pf = QPointF()
-            for i in p : pf += i
-            pf /= len(p)
         if len(polygon) < 3:
             self.initialPos = None
             self.finalPos = None
         else:
-            print(polygon)
-            self.initialPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN,p[1]*20/LEN) for p in polygon]))
+            x = y = 0
+            for i in polygon:
+                x += i[0]
+                y += i[1]
+            x /= len(polygon)
+            y /= len(polygon)
+            self.initialPos = PolygonPos(QPolygonF([QPointF((p[0]-x)*20/LEN,(p[1]-y)*20/LEN) for p in polygon]))
             self.initialPos.setPen(QPen(Qt.NoPen))
             self.initialPos.setBrush(QBrush(QColor(255,100,100)))
             self.initialPos.setZValue(60)
             self.initialPos.setPos(QPointF(pi))
             self.addItem(self.initialPos)
-            self.finalPos = PolygonPos(QPolygonF([QPointF(p[0]*20/LEN,p[1]*20/LEN) for p in polygon]))
+            self.finalPos = PolygonPos(QPolygonF([QPointF((p[0]-x)*20/LEN,(p[1]-y)*20/LEN) for p in polygon]))
             self.finalPos.setPen(QPen(Qt.NoPen))
             self.finalPos.setBrush(QBrush(QColor(100,255,100)))
             self.finalPos.setZValue(60)
-            self.initialPos.setPos(QPointF(pf))
+            self.finalPos.setPos(QPointF(pf))
             self.addItem(self.finalPos)
             
 class ObjectScene(PolyScene):
@@ -417,6 +420,29 @@ class ObjectScene(PolyScene):
     def environment(self, l):
         l = super().environment(l)
         return l[0] if len(l) else []
+
+    def removeController(self, ctrl):
+        ctrl.previous.next = ctrl.next
+        ctrl.next.previous = ctrl.previous
+        self.controllers.remove(ctrl)
+        self.removeItem(ctrl)
+        self.controllerMoved()
+        self.setCurrentController(None if ctrl.previous == ctrl else ctrl.previous)
+        self.polyChanged.emit()
+        self.updateDirectLine()
+
+    def setCurrentController(self, ctrl):
+        if self.currentController:
+            self.currentController.setCurrent(False)
+        if ctrl == None:
+            if self.currentController in self.controllers:
+                ctrl = self.currentController
+            elif len(self.controllers):
+                ctrl = self.controllers[0]
+        self.currentController = ctrl
+        if self.currentController:
+            self.currentController.setCurrent(True)
+        self.updateDirectLine()
 
         
 class Main(*loadUiType("planification.ui")):
@@ -534,7 +560,7 @@ class Main(*loadUiType("planification.ui")):
 
     @pyqtSlot()
     def on_actionSimplifier_triggered(self):
-        print("Bonjour !")
+        #print("Bonjour !")
         e = self.environment.environment(LEN)
         o = self.object.environment(LEN)
 
@@ -544,20 +570,21 @@ class Main(*loadUiType("planification.ui")):
             if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
                 (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
                 po.reverse()
-        print("Je m'en vais")
+        #print("Je m'en vais")
         poly, conv = simplify(e, o)
-        print((conv))
+        #print((conv))
         m = [0,0]
         for i in self.vue:
             self.environment.removeItem(i)
         self.vue = []
-        print(conv)
+        #print(conv)
         for i,p in enumerate(conv):
             rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
             self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
                                QPen(QColor(200,0,250,255)),
                                QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
-        print("Au revoir")
+        #
+        #print("Au revoir")
         #for p in poly:
         #    self.environment.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
 
