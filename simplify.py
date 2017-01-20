@@ -1,5 +1,24 @@
 from math import sqrt, atan2, pi
 
+
+def det(i,j,k):
+    """ Calcule det((IJ),(IK)) """
+    return (i[0]-j[0])*(k[1]-j[1])-(i[1]-j[1])*(k[0]-j[0])
+def proj(i,j,k):
+    """ Calcule (IJ).(IK) """
+    return (i[0]-j[0])*(k[0]-j[0])+(i[1]-j[1])*(k[1]-j[1])
+def norm2(i,j):
+    """ Calculz ||IJ|| """
+    return (i[0]-j[0])**2+(i[1]-j[1])**2
+def segmentContains(a,b, c):
+    """ Teste si c est dans [a,b] """
+    return proj(a,c,b) == -norm2(a,c)-norm2(c,b)
+def segmentsIntersect(a,b, c,d):
+    """ Teste si [a,b] coupe [c,d] """
+    return (det(a,c,b)*det(b,d,a) > 0 and det(c,a,d)*det(d,b,c) > 0) or (
+                segmentContains(a,b, c) or segmentContains(a,b, d) or
+                segmentContains(b,c, a) or segmentContains(b,c, b)) 
+
 def interieur(polygone, point):
     m=len(polygone)
     #je teste si le point est a gauche de chaque arete orientee du polygone
@@ -94,16 +113,8 @@ def get_convex(polygon):
         """Tells if the (i;j) edge is in the polygon"""
         l = len(polygon)
         if (i+1)%l == j:return False
-        det = lambda i,j,k : (i[0]-j[0])*(k[1]-j[1])-(i[1]-j[1])*(k[0]-j[0])
-        proj = lambda i,j,k : (i[0]-j[0])*(k[0]-j[0])+(i[1]-j[1])*(k[1]-j[1])
         for k in range(l):
-            if ((not k in [i,j] and det(polygon[i], polygon[k], polygon[j]) == 0 and
-                 proj(polygon[i], polygon[k], polygon[j]) < 0) or
-                (det(polygon[i], polygon[k], polygon[j])*
-                 det(polygon[j], polygon[k-1], polygon[i]) > 0 and
-                 det(polygon[k], polygon[i], polygon[k-1])*
-                 det(polygon[k-1], polygon[j], polygon[k]) > 0)):
-                #print(i,j,"-", k,polygon[i],polygon[j],polygon[k],polygon[k-1])
+            if not {k,(k-1)%l}&{i,j} and segmentsIntersect(polygon[i],polygon[j],polygon[k],polygon[k-1]):
                 return False
         a1 = atan2(polygon[i-1][0]-polygon[i][0],polygon[i-1][1]-polygon[i][1])
         a2 = atan2(polygon[(i+1)%l][0]-polygon[i][0],polygon[(i+1)%l][1]-polygon[i][1])
@@ -162,8 +173,14 @@ def sum_Minkowski(polygone, objet):
     return S
 
 
+def convexDecomposition(environment):
+    convex = []
+    for polygon in environment:
+        convex.extend(get_convex(polygon))
+    return convex
+    
 
-def simplify(lobstacles, objet):
+def simplify(lobstacles, objet = []):
     #l est la liste des obstacles: liste de polygones
     #o est l'objet que l'on veut déplacer (polygone)
     #print(lobstacles, objet)

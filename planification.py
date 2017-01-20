@@ -6,16 +6,23 @@ from colorsys import hsv_to_rgb
 
 from random import randint
 from simplify import simplify
+from steps import *
 
 EL_SIZE = 15
 LEN = 100000
 
+def ptsToPoly(p,LEN):
+    return QPolygonF([QPointF(i[0]*100/LEN, i[1]*100/LEN) for i in p])
+
 class Step(QObject):
     stateChanged = pyqtSignal()
-    def __init__(self, name = "Étape i", image = "tracer.png", parent = None):
+    def __init__(self, parent = None,
+                 validation = standardValidation,
+                 transformation = standardTransformation,
+                 name = "Étape", image = "tracer.png",):
         super().__init__()
-        self.isValidConfig = lambda *conf : True
-        self.transform = lambda *conf : (conf,[])
+        self.validation = validation
+        self.transformation = transformation
         self.nextSteps = []
         self.parent = parent
         if parent:
@@ -53,13 +60,14 @@ class Step(QObject):
 
 
     def update(self, *conf):
-        if self.isValidConfig(*conf):
+        if self.validation(*conf):
             self.setEnabled(True)
             if not self.button.isChecked():
                 return []
-            conf,items = self.transform(*conf)
-            return items + self.nextStep.update(*conf) if self.nextStep else []
+            conf,items = self.transformation(*conf)
+            return items + (self.nextStep.update(*conf) if self.nextStep else [])
         self.setEnabled(False)
+        return []
 
 
 class StepPainter(QWidget):
@@ -362,7 +370,14 @@ class PolyScene(QGraphicsScene):
 
 
     def environment(self, LEN):
-        return [[(int(LEN*p[0].x()/100), int(LEN*p[0].y()/100)) for p in i.ctrl] for i in self.polygons]
+        polygons = [[(int(LEN*p[0].x()/100), int(LEN*p[0].y()/100)) for p in i.ctrl] for i in self.polygons]
+        for po in polygons:
+            if len(po) > 2 :
+                ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
+                if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
+                    (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
+                    po.reverse()
+        return polygons
 
     def clear(self):
         for i in self.polygons:
@@ -374,6 +389,7 @@ class PolyScene(QGraphicsScene):
         self.directLine = None
         self.currentController = None
         self.controllers = []
+        self.polyChanged.emit()
 
 class EnvironmentScene(PolyScene):
     def __init__(self,*args):
@@ -479,7 +495,9 @@ class Main(*loadUiType("planification.ui")):
         
         self.currentItem = None
 
-        self.drawEnvi = Step("Décomposition en\npolygones convexes")
+        self.drawEnvi = Step(None, convexDecompositionValidation,
+                             convexDecompositionTransformation,
+                             "Décomposition en\npolygones convexes")
         def val(*conf) :
             if sum(map(len,conf[0]))%2:
                 return True
@@ -534,8 +552,8 @@ class Main(*loadUiType("planification.ui")):
         QTimer.singleShot(20, lambda : self.obj.scale(min(self.obj.width()/120, self.obj.height()/120),
                                                        min(self.obj.width()/120, self.obj.height()/120)))
 
-        self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
-        #self.environment.polyChanged.connect(self.updatePipeLine)
+        #self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
+        self.environment.polyChanged.connect(self.updatePipeLine)
         self.object.polyChanged.connect(self.updateObject)
         
         #self.envi.setSceneRect(QRectF(-10,-10,120,120))
@@ -544,6 +562,11 @@ class Main(*loadUiType("planification.ui")):
 
     @pyqtSlot()
     def on_actionNouveau_triggered(self):
+        self.on_actionClearObject_triggered()
+        self.on_actionClearEnvironment_triggered()
+
+    @pyqtSlot()
+    def on_actionClearObject_triggered(self):
         self.object.clear()
 
     @pyqtSlot()
@@ -565,11 +588,11 @@ class Main(*loadUiType("planification.ui")):
         o = self.object.environment(LEN)
 
         m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
-        for po in e:
-            ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
-            if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
-                (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
-                po.reverse()
+        #for po in e:
+        #    ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
+        #    if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
+        #        (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
+        #        po.reverse()
         #print("Je m'en vais")
         poly, conv = simplify(e, o)
         #print((conv))
@@ -599,7 +622,12 @@ class Main(*loadUiType("planification.ui")):
     
     @pyqtSlot()
     def updatePipeLine(self):
-        self.drawEnvi.update(self.environment.environment(LEN))
+        for i in self.vue:
+            self.environment.removeItem(i)
+        self.vue = []
+        for i in self.drawEnvi.update(self.environment.environment(LEN)):            self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
+                                                        QPen(QColor(*i[1])),
+                                                        QBrush(QColor(*i[1]))))
 
     @pyqtSlot()
     def on_actionClearConsole_triggered(self):
@@ -610,6 +638,25 @@ class Main(*loadUiType("planification.ui")):
                              "</font> <b><font color=\"Red\">Erreur</font></b> " +
                              obj.name.replace('\n', ' '))
         self.textEdit.append("    "+arg)
+
+    @pyqtSlot()
+    def on_actionOuvrir_triggered(self):
+        QFileDialog.getOpenFileName(self, "Ouvrir", "", "Fichier de plannification (*.pln)")
+
+    @pyqtSlot()
+    def on_actionEnregistrer_triggered(self):
+        pass
+
+    @pyqtSlot()
+    def on_actionEnregistrerSous_triggered(self):
+        a = QFileDialog.getSaveFileName(self, "Enregistrer sous", "", "Fichier de plannification (*.pln)")
+        if len(a):
+            f = open(a, mode='w')
+            f.write(str(LEN)+"\n")
+            f.write(str(self.environment.environment(LEN))+ "\n" +
+                    str(self.object.environment(LEN)))
+            f.close()
+
 
 def convex(p):
     l = [p]
