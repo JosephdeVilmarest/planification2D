@@ -53,9 +53,9 @@ class Step(QObject):
             for step in self.nextSteps:
                 step.setActive(a)
                 step.setEnabled(False)
-        self.stateChanged.emit()
         if self.parent:
             self.parent.nextStep = self if a else None
+        self.stateChanged.emit()
             
 
 
@@ -327,14 +327,20 @@ class PolyScene(QGraphicsScene):
     def mousePressEvent(self, me):
         #print(self.itemAt(me.scenePos(), self.view.transform()))
         #print(self.rect)
-        i = self.itemAt(me.scenePos(), self.view.transform())
+        i = self.items(me.scenePos(), Qt.IntersectsItemShape, Qt.AscendingOrder, self.view.transform())
+        for it in i:
+            if it.flags() & QGraphicsItem.ItemIsMovable:
+                super().mousePressEvent(me)
+                return
+        self.addController(me.scenePos())
+        super().mousePressEvent(me)
+        return
         #if i != None and i.flags() & QGraphicsItem.ItemIsMovable:
         super().mousePressEvent(me)
         #    return
         if not me.isAccepted():
             self.addController(me.scenePos())
-            me.setAccepted(False)
-            self.currentController.mousePressEvent(me)
+            super().mousePressEvent(me)
 
     def addController(self, pos):
         ctrl = Controller(self,self.currentController, QRectF(-QPointF(EL_SIZE//2,EL_SIZE//2),QSizeF(EL_SIZE,EL_SIZE)))
@@ -604,7 +610,8 @@ class Main(*loadUiType("planification.ui")):
             self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
                                                         QPen(QColor(*i[1])),
                                                         QBrush(QColor(*i[2]))))
-
+        print("hum")
+        self.update()
 
         
     def error(self, obj, arg):

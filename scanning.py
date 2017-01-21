@@ -40,14 +40,16 @@ def evalDroite(d,x):
 def droite_inf(point,droites):
     #dans droites il y a les droites infinies a la fin
     for i in reversed(droites):
-        if evalDroite(i,point[0]) <= point[1]:
+        y = evalDroite(i,point[0])
+        if y < point[1] or y == point[1] and y != LEN:
             return i
     assert False,"Droite inf non trouvée"
 
 def droite_sup(point,droites):
     #dans droites il y a les droites infinies a la fin
     for i in droites:
-        if evalDroite(i,point[0]) >= point[1]:
+        y = evalDroite(i,point[0])
+        if y > point[1] or y == point[1] and y != 0:
             return i
     assert False,"Droite sup non trouvée"
 
@@ -58,6 +60,8 @@ class Segment():
         return self.data[i]
     def __setitem__(self,i,d):
         self.data[i] = d
+    def __eq__(self,s):
+        return self is s
 
 def scanning(lobstacles,LEN):
     #renvoie la liste des cellules
@@ -133,14 +137,14 @@ def scanning(lobstacles,LEN):
                 drSup[2] = pt[1][0]
                 drSup[3] = evalDroite(drSup, pt[1][0])
                 segments.insert(segments.index(drSup),
-                                [pt,pt[0],pt[1][0],pt[1][1]])
+                                Segment(pt,pt[0],pt[1][0],pt[1][1]))
             else:
                 assert False,"Pas dans la droite"
         elif len(p) == 2:
             di = p[0]
             ds = p[1]
-            segments.remove(di)
             segments.remove(ds)
+            segments.remove(di)
             drSup = droite_sup(pt[1], segments)
             drInf = droite_inf(pt[1], segments)
             if det(pt[0][1],pt[1],pt[2][1])<0:

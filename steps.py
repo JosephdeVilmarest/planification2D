@@ -61,11 +61,14 @@ def minkovskySumTransformation(environment, object, *conf):
 
 
 ########### Décomposition en cellules ############
-# Pas de point / segment seul
+# Pas de point / segment seul + pas de superposition
 def cellDecompositionValidation(environment, *conf):
     for i in environment:
         if len(i)<3:
             return "Obstacle plat (point ou segment)"
+    for i in range(len(environment)):
+        for j in range(i):
+            pass # Vérif intersection
     return ""
 
 def cellDecompositionTransformation(environment, *conf):
