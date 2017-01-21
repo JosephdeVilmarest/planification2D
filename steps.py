@@ -1,6 +1,8 @@
 from simplify import *
+from scanning import scanning
 from colorsys import hsv_to_rgb
 from math import atan2
+from commun import *
 
 def standardValidation(*conf):
     """ Renvoie
@@ -21,7 +23,7 @@ def standardTransformation(*conf):
 ########### Décomposition en convexes ############
 # Suppose l'environement dans le sens trigo
 def convexDecompositionValidation(environment, *conf):
-    if not len(environment): return "Environnement vide"
+    if not len(environment): return ""
     for p in environment:
         if polyIsCrossed(p):
             return "Polygone(s) de l'environnement croisé(s)"
@@ -33,7 +35,8 @@ def convexDecompositionTransformation(environment, *conf):
     for i,p in enumerate(envi) :
         rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
         items.append((p,(200,0,250,255),(rvb[0], rvb[1], rvb[2])))
-    return [envi]+list(conf),items
+    # !!!! TEMPORAIRE : envi.
+    return [environment]+list(conf),items
 
 
 
@@ -53,3 +56,22 @@ def minkovskySumValidation(environment, object, *conf):
 
 def minkovskySumTransformation(environment, object, *conf):
     return [],[]
+
+
+
+
+########### Décomposition en cellules ############
+# Pas de point / segment seul
+def cellDecompositionValidation(environment, *conf):
+    for i in environment:
+        if len(i)<3:
+            return "Obstacle plat (point ou segment)"
+    return ""
+
+def cellDecompositionTransformation(environment, *conf):
+    s = scanning(environment, LEN)
+    items = []
+    for i,p in enumerate(s):
+        rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
+        items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
+    return [],items

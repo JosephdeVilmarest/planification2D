@@ -227,6 +227,7 @@
     </property>
     <addaction name="actionNouveau"/>
     <addaction name="actionOuvrir"/>
+    <addaction name="separator"/>
     <addaction name="actionEnregistrer"/>
     <addaction name="actionEnregistrerSous"/>
     <addaction name="separator"/>
@@ -236,12 +237,8 @@
     <property name="title">
      <string>&amp;Édition</string>
     </property>
-    <addaction name="actionAnnuler"/>
-    <addaction name="actionRetablir"/>
-    <addaction name="separator"/>
     <addaction name="actionClearEnvironment"/>
     <addaction name="actionClearObject"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuAide">
     <property name="title">
@@ -258,7 +255,6 @@
     <property name="title">
      <string>&amp;Plannification</string>
     </property>
-    <addaction name="actionSimplifier"/>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menu_dition"/>
@@ -387,40 +383,6 @@
     <string>À propos de &amp;Qt</string>
    </property>
   </action>
-  <action name="actionAnnuler">
-   <property name="icon">
-    <iconset theme="edit-undo">
-     <normaloff/>
-    </iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Annuler</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Z</string>
-   </property>
-  </action>
-  <action name="actionRetablir">
-   <property name="icon">
-    <iconset theme="edit-redo">
-     <normaloff/>
-    </iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Rétablir</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Z</string>
-   </property>
-  </action>
-  <action name="actionSimplifier">
-   <property name="text">
-    <string>Simplifier</string>
-   </property>
-   <property name="shortcut">
-    <string>F5</string>
-   </property>
-  </action>
   <action name="actionClearEnvironment">
    <property name="icon">
     <iconset theme="edit-clear"/>
@@ -435,17 +397,6 @@
    </property>
    <property name="text">
     <string>Réinitialiser l'objet</string>
-   </property>
-  </action>
-  <action name="actionClearConsole">
-   <property name="icon">
-    <iconset theme="edit-clear"/>
-   </property>
-   <property name="text">
-    <string>Nettoyer la console</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

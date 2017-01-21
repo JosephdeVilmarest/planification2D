@@ -9,7 +9,6 @@ from simplify import simplify
 from steps import *
 
 EL_SIZE = 15
-LEN = 100000
 
 def ptsToPoly(p,LEN):
     return QPolygonF([QPointF(i[0]*100/LEN, i[1]*100/LEN) for i in p])
@@ -328,11 +327,14 @@ class PolyScene(QGraphicsScene):
     def mousePressEvent(self, me):
         #print(self.itemAt(me.scenePos(), self.view.transform()))
         #print(self.rect)
-        if not self.itemAt(me.scenePos(), self.view.transform()) in [None, self.rect]:
-            super().mousePressEvent(me)
-            return
-        self.addController(me.scenePos())
+        i = self.itemAt(me.scenePos(), self.view.transform())
+        #if i != None and i.flags() & QGraphicsItem.ItemIsMovable:
         super().mousePressEvent(me)
+        #    return
+        if not me.isAccepted():
+            self.addController(me.scenePos())
+            me.setAccepted(False)
+            self.currentController.mousePressEvent(me)
 
     def addController(self, pos):
         ctrl = Controller(self,self.currentController, QRectF(-QPointF(EL_SIZE//2,EL_SIZE//2),QSizeF(EL_SIZE,EL_SIZE)))
@@ -473,14 +475,15 @@ class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
         super().__init__(*args)
         self.setupUi(self)
+        self.enr = ""
         self.splitter_2.setSizes([300,150,150])
         self.toolBar.addAction(self.actionNouveau)
         self.toolBar.addAction(self.actionOuvrir)
         self.toolBar.addAction(self.actionEnregistrer)
         self.toolBar.addAction(self.actionEnregistrerSous)
         self.toolBar.addSeparator()
-        self.toolBar.addAction(self.actionAnnuler)
-        self.toolBar.addAction(self.actionRetablir)
+        self.toolBar.addAction(self.actionClearEnvironment)
+        self.toolBar.addAction(self.actionClearObject)
         self.splitter.setSizes([170,25])
         l = QHBoxLayout()
         l.setContentsMargins(0,1,0,0)
@@ -514,7 +517,10 @@ class Main(*loadUiType("planification.ui")):
         Step(self, parent = a)
         Step(self, parent = a)
         #Step(a)
-        a=(Step(self, parent = self.convDecomp))
+        a=(Step(self, self.convDecomp,
+                cellDecompositionValidation,
+                cellDecompositionTransformation,
+                "Décomposition en\ntrapèzes"))
         sp = StepPainter(self.convDecomp)
         sp.pipeLineChanged.connect(self.updatePipeLine)
         self.steps.addWidget(sp)
@@ -538,8 +544,6 @@ class Main(*loadUiType("planification.ui")):
                     view.scale(a,a)
                     we.accept()
                 else:
-                    #print(we.delta())
-                    #b = -5 if we.delta() < 0 else 5
                     b = -we.delta()/4
                     if we.modifiers() & Qt.ShiftModifier:
                         view.horizontalScrollBar().setValue(
@@ -556,12 +560,9 @@ class Main(*loadUiType("planification.ui")):
         QTimer.singleShot(20, lambda : self.obj.scale(min(self.obj.width()/120, self.obj.height()/120),
                                                        min(self.obj.width()/120, self.obj.height()/120)))
 
-        #self.environment.polyChanged.connect(self.on_actionSimplifier_triggered)
         self.environment.polyChanged.connect(self.updatePipeLine)
         self.object.polyChanged.connect(self.updateObject)
         
-        #self.envi.setSceneRect(QRectF(-10,-10,120,120))
-        #self.obj.setSceneRect(QRectF(-10,-10,120,120))
        
 
     @pyqtSlot()
@@ -585,39 +586,6 @@ class Main(*loadUiType("planification.ui")):
     def on_actionProposQt_triggered(self):
         QMessageBox.aboutQt(self,"À propos de Qt")
 
-    @pyqtSlot()
-    def on_actionSimplifier_triggered(self):
-        #print("Bonjour !")
-        e = self.environment.environment(LEN)
-        o = self.object.environment(LEN)
-
-        m = (sum(i[0] for i in o)/len(o)-o[0][0],sum(i[1] for i in o)/len(o)-o[0][1])
-        #for po in e:
-        #    ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
-        #    if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
-        #        (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
-        #        po.reverse()
-        #print("Je m'en vais")
-        poly, conv = simplify(e, o)
-        #print((conv))
-        m = [0,0]
-        for i in self.vue:
-            self.environment.removeItem(i)
-        self.vue = []
-        #print(conv)
-        for i,p in enumerate(conv):
-            rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
-            self.vue.append(self.environment.addPolygon(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p]),
-                               QPen(QColor(200,0,250,255)),
-                               QBrush(QColor(rvb[0], rvb[1], rvb[2]))))
-        #
-        #print("Au revoir")
-        #for p in poly:
-        #    self.environment.addItem(QGraphicsPolygonItem(QPolygonF([QPointF((i[0]+m[0])*100/LEN,(i[1]+m[1])*100/LEN) for i in p])))
-
-    def setModel(self, model):
-        pass
-
 
     @pyqtSlot()
     def updateObject(self):
@@ -635,7 +603,7 @@ class Main(*loadUiType("planification.ui")):
                                         self.object.environment(LEN)):
             self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
                                                         QPen(QColor(*i[1])),
-                                                        QBrush(QColor(*i[1]))))
+                                                        QBrush(QColor(*i[2]))))
 
 
         
@@ -645,23 +613,54 @@ class Main(*loadUiType("planification.ui")):
 
     @pyqtSlot()
     def on_actionOuvrir_triggered(self):
-        QFileDialog.getOpenFileName(self, "Ouvrir", "", "Fichier de plannification (*.pln)")
+        a = QFileDialog.getOpenFileName(self, "Ouvrir", self.enr, "Fichier de plannification (*.pln)")
+        if len(a):
+            self.enr = a
+            try:
+                f = open(a)
+                l = eval(f.readline()[:-1])
+                e = eval(f.readline()[:-1])
+                o = eval(f.readline()[:-1])
+            except:
+                self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
+                                      a+"</font><br> &#160;&#160;&#160;&#160;Fichier incorrect")
+                return
+
+            self.on_actionNouveau_triggered()
+            e = [ptsToPoly(p,l) for p in e]
+            o = ptsToPoly(o,l)
+            for p in o:
+                self.object.addController(p)
+            for p in e:
+                for p in p:
+                    self.environment.addController(p)
+                self.environment.setCurrentController(None)
 
     @pyqtSlot()
     def on_actionEnregistrer_triggered(self):
-        pass
+        self.save()
 
     @pyqtSlot()
     def on_actionEnregistrerSous_triggered(self):
+        self.getName()
+        if len(self.enr):
+            self.save()
+            
+    def getName(self):
         a = QFileDialog.getSaveFileName(self, "Enregistrer sous", "", "Fichier de plannification (*.pln)")
         if len(a):
-            f = open(a, mode='w')
+            self.enr = a
+        
+
+    def save(self):
+        if not len(self.enr):
+            self.getName()
+        if len(self.enr):
+            f = open(self.enr, mode='w')
             f.write(str(LEN)+"\n")
             f.write(str(self.environment.environment(LEN))+ "\n" +
-                    str(self.object.environment(LEN)))
+                    str(self.object.environment(LEN))+ "\n")
             f.close()
-
-
 def convex(p):
     l = [p]
     return [QGraphicsPolygonItem(QPolygonF([QPointF(*i) for i in p])) for p in l],l
