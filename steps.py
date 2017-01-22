@@ -67,7 +67,7 @@ def minkovskySumTransformation(environment, object, *conf):
     envi = MinkowskiSum(environment, object)
     items = []
     for p in envi:
-        items.append((p, (220,220,220,90),(220,220,220,20)))
+        items.append((p, (220,220,220,240),(220,220,220,20)))
     return [envi]+list(conf),items
 
 
@@ -86,7 +86,8 @@ def unificationTransformation(environment, *conf):
                 break
         else:
             e.append(p)
-    envi = [[(q.x(),q.y()) for q in p[:-1]] for p in e]
+    lim = QPolygon([QPoint(0,0),QPoint(0,LEN),QPoint(LEN,LEN),QPoint(LEN,0)])
+    envi = [[(q.x(),q.y()) for q in p.intersected(lim)[:-1]] for p in e]
     for po in envi:
         if len(po) > 2 :
             ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
