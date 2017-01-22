@@ -59,7 +59,8 @@ def minkovskySumTransformation(environment, object, *conf):
 
 
 
-
+from PyQt4.QtGui import QPolygon
+from PyQt4.QtCore import QPoint
 ########### Décomposition en cellules ############
 # Pas de point / segment seul + pas de superposition
 def cellDecompositionValidation(environment, *conf):
@@ -68,7 +69,9 @@ def cellDecompositionValidation(environment, *conf):
             return "Obstacle plat (point ou segment)"
     for i in range(len(environment)):
         for j in range(i):
-            pass # Vérif intersection
+            if len(QPolygon([QPoint(*p) for p in environment[i]]).intersected(
+                QPolygon([QPoint(*p) for p in environment[j]]))):
+                return "Obstacles superposés"
     return ""
 
 def cellDecompositionTransformation(environment, *conf):
