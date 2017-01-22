@@ -18,7 +18,7 @@ class Step(QObject):
     def __init__(self, output, parent = None,
                  validation = standardValidation,
                  transformation = standardTransformation,
-                 name = "Étape", image = "tracer.png",):
+                 name = "Étape", image = "tracer.png"):
         super().__init__()
         self.output = output
         self.validation = validation
@@ -31,6 +31,7 @@ class Step(QObject):
         self.image = image
         self.nextStep = None
 
+
     def setEnabled(self, e):
         if not e:
             for i in self.nextSteps:
@@ -39,10 +40,13 @@ class Step(QObject):
             for step in self.nextSteps:
                 step.setEnabled(True)
         self.button.setEnabled(e)
+        self.action.setEnabled(e)
         
         
+    @pyqtSlot(bool)
     def setActive(self, a):
         self.button.setChecked(a)
+        self.action.setChecked(a)
         if a:
             if self.parent:
                 for i in filter(lambda a : a!=self, self.parent.nextSteps):
@@ -77,7 +81,7 @@ class Step(QObject):
 
 class StepPainter(QWidget):
     pipeLineChanged = pyqtSignal()
-    def __init__(self, initStep, *args):
+    def __init__(self, initStep, win, *args):
         super().__init__(*args)
         self.initStep = initStep
         self.lay = QVBoxLayout()
@@ -90,6 +94,12 @@ class StepPainter(QWidget):
             for step in steps:
                 but = QToolButton(self)
                 hLay.addWidget(but)
+                act = QAction(self)
+                act.setText(step.name.replace("\n"," "))
+                act.setCheckable(True)
+                act.toggled.connect(step.setActive)
+                step.action = act
+                win.menuPlannification.addAction(act)
                 but.setText(step.name)
                 but.setIcon(QIcon(step.image))
                 but.setIconSize(QSize(128,64))
@@ -146,7 +156,7 @@ class Controller(QGraphicsEllipseItem):
 
     def setCurrent(self, b = True):
         self.setBrush(QColor(255,255,0) if b else QColor(255,100,0))
-        self.setZValue(b)
+        self.setZValue(b+.1)
         self.current = b
 
     def setPrevious(self, previous):
@@ -223,6 +233,7 @@ class Polygon(QGraphicsPolygonItem):
         self.setZValue(-2)
 
     def mousePressEvent(self, me):
+        self.move = me.buttons() & Qt.RightButton
         if me.buttons() & Qt.LeftButton:
             self.setCursor(Qt.ClosedHandCursor)
         self.setZValue(3)
@@ -232,6 +243,7 @@ class Polygon(QGraphicsPolygonItem):
         
 
     def mouseMoveEvent(self, me):
+        self.move = False
         super().mouseMoveEvent(me)
         p = self.pos()
         for c in self.ctrl:
@@ -241,8 +253,14 @@ class Polygon(QGraphicsPolygonItem):
     def mouseReleaseEvent(self, me):
         self.setCursor(Qt.ArrowCursor)
         self.setZValue(-2)
+        if self.move:
+            s = self.scene()
+            for i in self.ctrl:
+                s.removeController(i[0])
+            super().mouseReleaseEvent(me)
+            return
         for c in self.ctrl:
-            c[0].setZValue(c[0].current)
+            c[0].setZValue(c[0].current+.1)
         super().mouseReleaseEvent(me)
 
     def itemChange(self, change, value):
@@ -267,6 +285,9 @@ class PolygonPos(QGraphicsPolygonItem):
         super().__init__(*args)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
+        c = QGraphicsEllipseItem(-2,-2,4,4,self)
+        c.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
+        c.setBrush(QColor(0,0,0))
 
     def mousePressEvent(self, me):
         if me.buttons() & Qt.LeftButton:
@@ -491,6 +512,9 @@ class Main(*loadUiType("planification.ui")):
         self.toolBar.addAction(self.actionClearEnvironment)
         self.toolBar.addAction(self.actionClearObject)
         self.splitter.setSizes([170,25])
+        self.statusbar.addPermanentWidget(QLabel("<i>Ctrl+roulette : changer le zoom"))
+        self.statusbar.addPermanentWidget(QLabel("<i>Clic gauche : ajouter des éléments"))
+        self.statusbar.addPermanentWidget(QLabel("<i>Clic droit : supprimer des éléments"))
         l = QHBoxLayout()
         l.setContentsMargins(0,1,0,0)
         ##l.addWidget(QLabel("Bonjour"))
@@ -512,6 +536,7 @@ class Main(*loadUiType("planification.ui")):
         
         self.currentItem = None
 
+
         self.convDecomp = Step(self, None, convexDecompositionValidation,
                                convexDecompositionTransformation,
                                "Décomposition en\npolygones convexes")
@@ -527,7 +552,7 @@ class Main(*loadUiType("planification.ui")):
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes"))
-        sp = StepPainter(self.convDecomp)
+        sp = StepPainter(self.convDecomp, self)
         sp.pipeLineChanged.connect(self.updatePipeLine)
         self.steps.addWidget(sp)
 
@@ -592,7 +617,18 @@ class Main(*loadUiType("planification.ui")):
     def on_actionProposQt_triggered(self):
         QMessageBox.aboutQt(self,"À propos de Qt")
 
-
+    @pyqtSlot()
+    def on_actionPropos_triggered(self):
+        QMessageBox.about(self,"À propos","""
+<b>Planification du mouvement</b><br><br>
+Logiciel de visualisation d'aglorithmes<br> de planification
+du mouvement.
+<br><br>
+Joseph Moullart De Vilmarest,<br>
+Marc Courdiau, Baptiste Pauget<br><br>
+Janvier 2017
+""")
+        
     @pyqtSlot()
     def updateObject(self):
         self.environment.setObject(self.object.environment(LEN))
@@ -610,8 +646,7 @@ class Main(*loadUiType("planification.ui")):
             self.vue.append(self.environment.addPolygon(ptsToPoly(i[0],LEN),
                                                         QPen(QColor(*i[1])),
                                                         QBrush(QColor(*i[2]))))
-        print("hum")
-        self.update()
+
 
         
     def error(self, obj, arg):

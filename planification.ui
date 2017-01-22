@@ -248,8 +248,6 @@
     <addaction name="separator"/>
     <addaction name="actionPropos"/>
     <addaction name="actionProposQt"/>
-    <addaction name="separator"/>
-    <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuPlannification">
     <property name="title">
@@ -361,18 +359,6 @@
    </property>
    <property name="shortcut">
     <string>Shift+F1</string>
-   </property>
-  </action>
-  <action name="actionPreferences">
-   <property name="icon">
-    <iconset>
-     <normaloff>options.png</normaloff>options.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Préférences</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+P</string>
    </property>
   </action>
   <action name="actionProposQt">
