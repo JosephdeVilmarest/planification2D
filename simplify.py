@@ -142,8 +142,8 @@ def sum_Minkowski(polygone, objet):
         i0=(i0+1)%n
     i=i0 #indice de parcours de ap
     j=1  #indice de parcours de ao
-    S=[(polygone[i][0]-(objet[1][0]-objet[0][0]), 
-                        polygone[i][1]-(objet[1][1]-objet[0][1]))]
+    S=[(polygone[i][0]-(objet[1][0]-0*objet[0][0]), 
+                        polygone[i][1]-(objet[1][1]-0*objet[0][1]))]
     P=S[0]  #dernier point utilisé
     a=ao[0] #dernier angle utilisé
     flag=True
@@ -186,3 +186,9 @@ def simplify(lobstacles, objet = []):
     #print("ok")
     #lconvexe = [p]#[[(10,10),(5000,5000),(2000,2000)]]
     return p, lconvexe
+
+def MinkowskiSum(envi,obj):
+    l = []
+    for p in envi:
+        l.append(sum_Minkowski(p,obj))
+    return l

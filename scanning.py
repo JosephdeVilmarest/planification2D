@@ -65,18 +65,19 @@ class Segment():
 
 def scanning(lobstacles,LEN):
     #renvoie la liste des cellules
-    #print(lobstacles)
     cells = []
     
     envi = []
+    
     for p in lobstacles:
         l = len(p)
+        q = [None]*l
         for i in range(l):
-            p[i] = [None,p[i],None]
+            q[i] = [None,p[i],None]
         for i in range(l):
-            p[i-1][2] = p[i]
-            p[(i+1)%l][0] = p[i]
-        envi += p
+            q[i-1][2] = q[i]
+            q[(i+1)%l][0] = q[i]
+        envi += q
     envi.sort(key = lambda e : LEN*e[1][0]+e[1][1])
 
     p = [None, (LEN,0), None]

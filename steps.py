@@ -3,6 +3,9 @@ from scanning import scanning
 from colorsys import hsv_to_rgb
 from math import atan2
 from commun import *
+from visibility import visibility_graph
+from PyQt4.QtGui import QPolygon
+from PyQt4.QtCore import QPoint
 
 def standardValidation(*conf):
     """ Renvoie
@@ -43,7 +46,11 @@ def convexDecompositionTransformation(environment, *conf):
 ########### Somme de Minkovsky ############
 # Suppose l'environement convexe
 def minkovskySumValidation(environment, object, *conf):
+    if not len(object): return "Objet non défini"
     if len(object) < 3: return ""
+    for i in environment:
+        if len(i)<3:
+            return "Obstacles ponctuels/linéaires non pris en charge"
     if polyIsCrossed(object):
         return "Polygone object croisé"
     angle = lambda i,j : atan2(object[j][0]-object[i][0],object[j][1]-object[i][1])
@@ -55,12 +62,43 @@ def minkovskySumValidation(environment, object, *conf):
     return ""
 
 def minkovskySumTransformation(environment, object, *conf):
-    return [],[]
+    if len(object) == 1:
+        return [environment]+list(conf),[]
+    envi = MinkowskiSum(environment, object)
+    items = []
+    for p in envi:
+        items.append((p, (220,220,220,90),(220,220,220,20)))
+    return [envi]+list(conf),items
 
 
+########### Suppression des superpositions ############
+# 
+def unificationValidation(environment, *conf):
+    return ""
 
-from PyQt4.QtGui import QPolygon
-from PyQt4.QtCore import QPoint
+def unificationTransformation(environment, *conf):
+    e = []
+    for i in environment:
+        p = QPolygon([QPoint(*i) for  i in i]+[QPoint(*i[0])])
+        for k,q in enumerate(e):
+            if len(q.intersected(p)):
+                e[k] = q.united(p)
+                break
+        else:
+            e.append(p)
+    envi = [[(q.x(),q.y()) for q in p[:-1]] for p in e]
+    for po in envi:
+        if len(po) > 2 :
+            ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
+            if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
+                (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
+                po.reverse()
+    items = []
+    for p in envi:
+        items.append((p, (220,220,220,240),(220,220,220,100)))
+    return [envi]+list(conf),items
+
+
 ########### Décomposition en cellules ############
 # Pas de point / segment seul + pas de superposition
 def cellDecompositionValidation(environment, *conf):
@@ -81,3 +119,31 @@ def cellDecompositionTransformation(environment, *conf):
         rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
         items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
     return [],items
+
+
+
+
+########### Graphe de visibilité ############
+# Pas de point / segment seul + pas de superposition
+def visibilityGraphValidation(environment, posI, posF, *conf):
+    if posI == None or posF == None:
+        return "Pas de point de départ/arrivée"
+    pi = QPoint(*posI)
+    pf = QPoint(*posF)
+    for i in environment:
+        p = QPolygon([QPoint(*p) for p in i])
+        if p.containsPoint(pi,0):
+            return "Position intiale en colision"
+        if p.containsPoint(pf,0):
+            return "Position finale en colision"
+    return ""
+
+def visibilityGraphTransformation(environment, posI, posF, *conf):
+    s,m = visibility_graph(posI,posF,environment)
+    items = []
+    for i in range(len(s)):
+        for j in range(i):
+            if m[i][j]:
+                items.append(((s[i][0],s[j][0]), (0,180,50),(0,0,0,0)))
+    return [],items
+
