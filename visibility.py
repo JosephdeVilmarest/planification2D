@@ -126,4 +126,5 @@ def visibility_graph(depart, arrivee, lobstacles):
                     M[i][j]=0
                     M[j][i]=0
 
+    S=[S[i][0] for i in range(len(S))]
     return (S,M)
