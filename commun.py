@@ -18,3 +18,17 @@ def segmentsIntersect(a,b, c,d):
     return (det(a,c,b)*det(b,d,a) > 0 and det(c,a,d)*det(d,b,c) > 0) or (
                 segmentContains(a,b, c) or segmentContains(a,b, d) or
                 segmentContains(b,c, a) or segmentContains(b,c, b)) 
+
+def barycenter(l):
+    """ Calcul le barycentre d'une liste de points """
+    x = 0
+    y = 0
+    for i in l:
+        x += i[0]
+        y += i[1]
+    return (x/len(l), y/len(l))
+
+
+def barycenterInt(l):
+    """ Calcul le barycentre d'une liste de points version entier"""
+    return tuple(map(int,barycenter(l)))

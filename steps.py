@@ -118,7 +118,9 @@ def cellDecompositionTransformation(environment, *conf):
     items = []
     for i,p in enumerate(s):
         rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
-        items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
+        #items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
+        items.append((p.trap, (rvb[0], rvb[1], rvb[2]),(rvb[0], rvb[1], rvb[2],80)))
+        
     return [],items
 
 

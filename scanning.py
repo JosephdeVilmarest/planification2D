@@ -1,37 +1,8 @@
 from commun import *
 
-def merge(l1,l2):
-    n,m=len(l1),len(l2)
-    i,j=0,0
-    l=[]
-    while i<n and j<m:
-        if l1[i][0][0]<l2[j][0][0]:
-            l.append(l1[i])
-            i += 1
-        else:
-            l.append(l2[j])
-            j += 1
-    if i<n:
-        l.extend(l1[i:])
-    else:
-        l.extend(l2[j:])
-    return l
-
-def merge_sort(l):
-    #on renvoie les indices de l triee par abscisse croissante
-    #il y a surement une fonction python qui fait ca que je ne connais pas
-    l=[[l[i],i] for i in range(len(l))]
-    def aux(l):
-        if len(l)<2:
-            return l
-        return merge(aux(l[:len(l)//2]),aux(l[len(l)//2:]))
-    lprime=aux(l)
-    return [lprime[i][1] for i in range(len(l))]
-
-
-
 
 def eval_droite(p1,p2,x):
+    if x == p2[0]: return p2[1]
     return p1[1]+(x-p1[0])*(p2[1]-p1[1])//(p2[0]-p1[0])
 
 def evalDroite(d,x):
@@ -40,7 +11,7 @@ def evalDroite(d,x):
 def droite_inf(point,droites):
     #dans droites il y a les droites infinies a la fin
     for i in reversed(droites):
-        y = evalDroite(i,point[0])
+        y = i.value(point[0])
         if y < point[1] or y == point[1] and y != LEN:
             return i
     assert False,"Droite inf non trouvée"
@@ -48,25 +19,71 @@ def droite_inf(point,droites):
 def droite_sup(point,droites):
     #dans droites il y a les droites infinies a la fin
     for i in droites:
-        y = evalDroite(i,point[0])
+        y = i.value(point[0])
         if y > point[1] or y == point[1] and y != 0:
             return i
     assert False,"Droite sup non trouvée"
 
+
 class Segment():
-    def __init__(self, p1, p2, x, y):
-        self.data = [p1,p2,x,y]
+    def __init__(self, p1, p2, x, y, cell):
+        self.data = [p1,p2,x,y,cell]
     def __getitem__(self,i):
         return self.data[i]
     def __setitem__(self,i,d):
         self.data[i] = d
     def __eq__(self,s):
         return self is s
+    
+class Segment():
+    def __init__(self, p1,p2,cell=None):
+        self.p1 = p1
+        self.p2 = p2
+        self.lastX = p1[1][0]
+        self.lastY = p1[1][1]
+        self.lastCell = cell
+
+    def value(self, x):
+        return eval_droite(self.p1[1],self.p2[1],x)
+        
+class Cell():
+    def __init__(self,x,sMin,sMax):
+        self.isEmpty = True
+        assert sMin.lastX == sMax.lastX
+        yMin = sMin.value(x)
+        yMax = sMax.value(x)
+        self.trap = [(x,yMax),(sMax.lastX,sMax.lastY),
+                     (sMin.lastX,sMin.lastY),(x,yMin)]
+        self.bar = barycenterInt(self.trap)
+        self.rightHeight = yMax-yMin
+        if sMin.lastY != sMax.lastY:
+            self.isEmpty = False
+            if sMin.lastCell:
+                sMin.lastCell.addNext(self)
+            sMin.lastCell = None
+            if sMax.lastCell:
+                sMax.lastCell.addNext(self)
+            sMax.lastCell = None
+        if self.rightHeight:
+            self.isEmpty = False
+            sMin.lastCell = self
+            sMax.lastCell = self
+        sMin.lastX = x
+        sMax.lastX = x
+        sMin.lastY = yMin
+        sMax.lastY = yMax
+        self.nextCells = []
+
+    def addNext(self,cell):
+        self.nextCells.append(cell)
+
+    def realCell(self):
+        return None if self.isEmpty else self
 
 def scanning(lobstacles,LEN):
     #renvoie la liste des cellules
     cells = []
-    
+
     envi = []
     
     for p in lobstacles:
@@ -89,56 +106,38 @@ def scanning(lobstacles,LEN):
     q[0][2] = q
     q[2][0] = q
     # Point1, Point2, x dernière droite vue
-    segments = [Segment(p,p[0],0,p[1][1]),
-                Segment(q,q[0],0,q[1][1])]
+    segments = [Segment(p,p[0]),
+                Segment(q,q[0])]
 
     for pt in envi:
-        p = list(filter(lambda e : pt is e[1], segments))
+        p = list(filter(lambda e : pt is e.p2, segments))
+        x = pt[1][0]
         if len(p) == 0:
             drSup = droite_sup(pt[1], segments)
             drInf = droite_inf(pt[1], segments)
             k = segments.index(drSup)
             if det(pt[0][1],pt[1],pt[2][1])<0:
-                assert drSup[2]==drInf[2], "Bizarre"
-                cells.append(((pt[1][0],evalDroite(drSup,pt[1][0])),
-                              (drSup[2],evalDroite(drSup,drSup[2])),
-                #              (drSup[2],pt[1][1]),(pt[1][0],pt[1][1])))
-                #cells.append(((pt[1][0],pt[1][1]),(drInf[2],pt[1][1]),
-                              (drInf[2],evalDroite(drInf,drInf[2])),
-                              (pt[1][0],evalDroite(drInf,pt[1][0]))))
-                drSup[2] = pt[1][0]
-                drSup[3] = evalDroite(drSup, pt[1][0])
-                drInf[2] = pt[1][0]
-                drInf[3] = evalDroite(drInf, pt[1][0])
-                segments.insert(k,Segment(pt,pt[0],pt[1][0],pt[1][1]))
-                segments.insert(k,Segment(pt,pt[2],pt[1][0],pt[1][1]))
+                c = Cell(x,drInf,drSup).realCell()
+                if c : cells.append(c)
+                segments.insert(k,Segment(pt,pt[0],c))
+                segments.insert(k,Segment(pt,pt[2],c))
             else:
-                segments.insert(k,Segment(pt,pt[2],pt[1][0],pt[1][1]))
-                segments.insert(k,Segment(pt,pt[0],pt[1][0],pt[1][1]))
+                segments.insert(k,Segment(pt,pt[2]))
+                segments.insert(k,Segment(pt,pt[0]))
         elif len(p) == 1:
             dr = p[0]
-            if dr[0] is pt[0]: # vers le bas
+            if dr.p1 is pt[0]: # vers le bas
                 segments.remove(dr)
                 drInf = droite_inf(pt[1],segments)
-                assert drInf[2]==dr[2], "Bizarre"
-                cells.append(((pt[1][0],pt[1][1]),
-                              (dr[2],dr[3]),(drInf[2],drInf[3]),
-                              (pt[1][0],evalDroite(drInf, pt[1][0]))))
-                drInf[2] = pt[1][0]
-                drInf[3] = evalDroite(drInf, pt[1][0])
-                segments.insert(segments.index(drInf)+1,
-                                Segment(pt,pt[2],pt[1][0],pt[1][1]))
-            elif dr[0] is pt[2]: # vers le haut
+                c = Cell(x, drInf, dr).realCell()
+                if c : cells.append(c)
+                segments.insert(segments.index(drInf)+1, Segment(pt,pt[2],c))
+            elif dr.p1 is pt[2]: # vers le haut
                 segments.remove(dr)
                 drSup = droite_sup(pt[1],segments)
-                assert drSup[2]==dr[2], "Bizarre"
-                cells.append(((pt[1][0],evalDroite(drSup, pt[1][0])),
-                              (drSup[2],drSup[3]),(dr[2],dr[3]),
-                              (pt[1][0],pt[1][1])))
-                drSup[2] = pt[1][0]
-                drSup[3] = evalDroite(drSup, pt[1][0])
-                segments.insert(segments.index(drSup),
-                                Segment(pt,pt[0],pt[1][0],pt[1][1]))
+                c = Cell(x, dr, drSup).realCell()
+                if c : cells.append(c)
+                segments.insert(segments.index(drSup), Segment(pt,pt[0],c))
             else:
                 assert False,"Pas dans la droite"
         elif len(p) == 2:
@@ -146,33 +145,20 @@ def scanning(lobstacles,LEN):
             ds = p[1]
             segments.remove(ds)
             segments.remove(di)
-            drSup = droite_sup(pt[1], segments)
-            drInf = droite_inf(pt[1], segments)
             if det(pt[0][1],pt[1],pt[2][1])<0:
-                assert di[2]==drInf[2], "Bizarre"
-                assert ds[2]==drSup[2], "Bizarre"
-                cells.append(((pt[1][0],evalDroite(drSup, pt[1][0])),
-                              (drSup[2],drSup[3]),(ds[2],ds[3]),
-                              (pt[1][0],pt[1][1])))
-                cells.append(((pt[1][0],pt[1][1]),
-                              (di[2],di[3]),(drInf[2],drInf[3]),
-                              (pt[1][0],evalDroite(drInf, pt[1][0]))))
-                drSup[2] = pt[1][0]
-                drSup[3] = evalDroite(drSup, pt[1][0])
-                drInf[2] = pt[1][0]
-                drInf[3] = evalDroite(drInf, pt[1][0])
+                drSup = droite_sup(pt[1], segments)
+                drInf = droite_inf(pt[1], segments)
+                c = Cell(x, ds, drSup).realCell()
+                if c : cells.append(c)
+                c = Cell(x, drInf, di).realCell()
+                if c : cells.append(c)
             else:
-                assert ds[2]==di[2], "Bizarre"
-                cells.append(((pt[1][0],pt[1][1]),
-                              (ds[2],ds[3]),(di[2],di[3]),
-                              (pt[1][0],pt[1][1])))
-                
+                c = Cell(x, di, ds).realCell()
+                if c : cells.append(c)
         else:
             assert False
-    assert len(segments)==2
-    cells.append(((segments[0][2],segments[0][3]),
-                  (segments[0][1][1][0],segments[0][1][1][1]),
-                  (segments[-1][1][1][0],segments[-1][1][1][1]),
-                  (segments[-1][2],segments[-1][3])))
+    assert len(segments)==2 # Ambitieux !
+    c = Cell(LEN,segments[0], segments[-1]).realCell()
+    if c : cells.append(c)
     return cells
 

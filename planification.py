@@ -18,21 +18,23 @@ def polyToPts(p,LEN):
 
 class Step(QObject):
     stateChanged = pyqtSignal()
-    def __init__(self, output, parent = None,
+    def __init__(self, output, parent = [],
                  validation = standardValidation,
                  transformation = standardTransformation,
                  name = "Étape", image = "tracer.png"):
         super().__init__()
+        self.added = False
         self.output = output
         self.validation = validation
         self.transformation = transformation
         self.nextSteps = []
-        self.parent = parent
-        if parent:
-            parent.nextSteps.append(self)
+        self.parent = list(filter(lambda e:e, parent if type(parent)==list else [parent]))
+        for p in self.parent:
+            p.nextSteps.append(self)
         self.name = name
         self.image = image
         self.nextStep = None
+        self.isActive = True
 
 
     def setEnabled(self, e):
@@ -49,12 +51,13 @@ class Step(QObject):
         
     @pyqtSlot(bool)
     def setActive(self, a):
+        self.isActive = a
         if self.parent:
             self.button.setChecked(a)
             self.action.setChecked(a)
         if a:
-            if self.parent:
-                for i in filter(lambda a : a!=self, self.parent.nextSteps):
+            for p in self.parent:
+                for i in filter(lambda a : a!=self, p.nextSteps):
                     i.setActive(False)
             for step in self.nextSteps:
                 step.setEnabled(True)
@@ -62,8 +65,8 @@ class Step(QObject):
             for step in self.nextSteps:
                 step.setActive(a)
                 step.setEnabled(False)
-        if self.parent:
-            self.parent.nextStep = self if a else None
+        for p in self.parent:
+            p.nextStep = self if a else None
         self.stateChanged.emit()
             
 
@@ -111,12 +114,19 @@ class StepPainter(QWidget):
                 but.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
                 but.setCheckable(True)
                 step.button = but
+                step.added = True
                 step.stateChanged.connect(self.update)
                 step.stateChanged.connect(lambda : self.pipeLineChanged.emit())
                 but.toggled.connect(step.setActive)
-                nextSteps += step.nextSteps
+                for s in step.nextSteps:
+                    for p in s.parent:
+                        if not p.added:
+                            break
+                    else:
+                        nextSteps.append(s)
             if nextSteps:
                 addSteps(nextSteps)
+        initStep.added = True
         addSteps(initStep.nextSteps)
         self.lay.addItem(QSpacerItem(0,0,QSizePolicy.Expanding, QSizePolicy.Expanding))
         initStep.setActive(False)
@@ -129,7 +139,7 @@ class StepPainter(QWidget):
         p.setWidth(3)
         def drawRelation(step):
             for nextStep in step.nextSteps:
-                p.setColor(palette.color(QPalette.Text) if nextStep.button.isChecked() else
+                p.setColor(palette.color(QPalette.Text) if step.isActive and nextStep.isActive else
                            palette.color(QPalette.Mid))
                 pa.setPen(p)
                 pa.drawLine(step.button.pos() + QPoint(step.button.width()//2,step.button.height()//2),
@@ -553,21 +563,22 @@ class Main(*loadUiType("planification.ui")):
         a = Step(self, a, unificationValidation,
                  unificationTransformation,
                  "Unification")
-        Step(self, a, visibilityGraphValidation,
+        c = Step(self, a, visibilityGraphValidation,
              visibilityGraphTransformation,
              "Graphe de\nvisibitlité")
         #Step(a)
-        Step(self, a,
+        b = Step(self, a,
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes")
-        a = Step(self, parent = Step(self, parent = None))
-        Step(self, parent = a)
-        Step(self, parent = a)
-        a=(Step(self, self.hiddenStep,
-                cellDecompositionValidation,
-                cellDecompositionTransformation,
-                "Décomposition en\ntrapèzes"))
+        
+        #Step(self, [b,c])
+
+        #Step(self, parent = a)
+        #a=(Step(self, self.hiddenStep,
+        #        cellDecompositionValidation,
+        #        cellDecompositionTransformation,
+        #        "Décomposition en\ntrapèzes"))
         sp = StepPainter(self.hiddenStep, self)
         sp.pipeLineChanged.connect(self.updatePipeLine)
         self.steps.addWidget(sp)
