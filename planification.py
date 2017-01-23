@@ -107,7 +107,7 @@ class StepPainter(QWidget):
                 act.setCheckable(True)
                 act.toggled.connect(step.setActive)
                 step.action = act
-                win.menuPlannification.addAction(act)
+                win.menuPlanification.addAction(act)
                 but.setText(step.name)
                 but.setIcon(QIcon(step.image))
                 but.setIconSize(QSize(128,64))

@@ -145,14 +145,19 @@ def cellDecompositionTransformation(environment, *conf):
         pts.append(p.bar)
         for c in p.previousCells:
             if c.rightHeight >= p.leftHeight:
-                
+                o=(p.xMax, p.leftY)
                 items.append(((p.bar,(p.xMin, p.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
+                o=(p.xMin, c.rightY)
                 items.append(((p.bar,(p.xMin, c.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+            pts.append((pi,pts.index(o)))
         for c in p.nextCells:
+            cps.append(pi,len(pts))
             if p.rightHeight < c.leftHeight:
+                pts.append((p.xMax, p.rightY))
                 items.append(((p.bar,(p.xMax, p.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
+                pts.append((p.xMax, c.leftY))
                 items.append(((p.bar,(p.xMax, c.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
     
     return [],items
