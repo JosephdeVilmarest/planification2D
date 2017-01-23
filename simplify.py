@@ -137,8 +137,10 @@ def sum_Minkowski(polygone, objet):
     #le polygone est convexe donc ap est ordonnée, à une rotation près
     ap=angle_normal(polygone, 1)
     ao=angle_normal(objet, -1)
-    i0=1
-    while ap[i0-1]>ao[0] or ap[i0%n]<ao[0]:
+    i0=0
+    while not((ap[(i0-1)%n]<=ao[0] and ao[0]<=ap[i0]) or 
+                (ao[0]<=ap[(i0-1)%n] and ao[0]<=ap[i0]) or 
+                (ap[(i0-1)%n]<=ao[0] and ap[i0]<=ao[0])):
         i0=(i0+1)%n
     i=i0 #indice de parcours de ap
     j=1  #indice de parcours de ao
