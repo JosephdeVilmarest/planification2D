@@ -535,6 +535,7 @@ class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
         super().__init__(*args)
         self.setupUi(self)
+        self.setWindowIcon(QIcon("images/tracer.png"))
         self.enr = ""
         self.splitter_2.setSizes([300,150,150])
         self.toolBar.addAction(self.actionNouveau)
