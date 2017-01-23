@@ -567,12 +567,12 @@ class Main(*loadUiType("planification.ui")):
              visibilityGraphTransformation,
              "Graphe de\nvisibitlité")
         #Step(a)
-        b = Step(self, a,
+        b = Step(self, self.hiddenStep,#a,
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes")
         
-        Step(self, [b,c])
+        #Step(self, [b,c])
 
         #Step(self, parent = a)
         #a=(Step(self, self.hiddenStep,

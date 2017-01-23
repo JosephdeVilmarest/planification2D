@@ -122,15 +122,15 @@ def cellDecompositionTransformation(environment, *conf):
         #items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
         items.append((p.trap, (rvb[0], rvb[1], rvb[2],150),(rvb[0], rvb[1], rvb[2],80)))
         for c in p.previousCells:
-            if c.rightHeight > p.leftHeight:
-                items.append(((p.bar,(p.xMin, p.bar[1])), (rvb[0], rvb[1], rvb[2]),(0,0,0,0)))
+            if c.rightHeight >= p.leftHeight:
+                items.append(((p.bar,(p.xMin, p.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
-                items.append(((p.bar,(p.xMin, c.bar[1])), (rvb[0], rvb[1], rvb[2]),(0,0,0,0)))
+                items.append(((p.bar,(p.xMin, c.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
         for c in p.nextCells:
-            if p.rightHeight > c.leftHeight:
-                items.append(((p.bar,(p.xMax, p.bar[1])), (rvb[0], rvb[1], rvb[2]),(0,0,0,0)))
+            if p.rightHeight < c.leftHeight:
+                items.append(((p.bar,(p.xMax, p.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
-                items.append(((p.bar,(p.xMax, c.bar[1])), (rvb[0], rvb[1], rvb[2]),(0,0,0,0)))
+                items.append(((p.bar,(p.xMax, c.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
     return [],items
 
 

@@ -68,14 +68,10 @@ class Cell():
             if sMax.lastCell:
                 sMax.lastCell.addNext(self)
             sMax.lastCell = None
-            if sMax.lastCell:
-                self.previousCells.append(sMax.lastCell)
         if self.rightHeight:
             self.isEmpty = False
             sMin.lastCell = self
             sMax.lastCell = self
-            if not len(self.previousCells) or self.previousCells[-1] != sMin.lastCell and sMin.lastCell:
-                self.previousCells.append(sMin.lastCell)
         sMin.lastX = x
         sMax.lastX = x
         sMin.lastY = yMin
@@ -84,6 +80,7 @@ class Cell():
 
     def addNext(self,cell):
         self.nextCells.append(cell)
+        cell.previousCells.append(self)
 
     def realCell(self):
         return None if self.isEmpty else self
