@@ -16,7 +16,39 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,1">
     <item>
-     <layout class="QGridLayout" name="steps"/>
+     <widget class="QWidget" name="widget_2" native="true">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="steps"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item>
      <widget class="Line" name="line">
@@ -218,7 +250,7 @@
      <x>0</x>
      <y>0</y>
      <width>1075</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFichier">
@@ -344,7 +376,9 @@
   </action>
   <action name="actionPropos">
    <property name="icon">
-    <iconset theme="help-about"/>
+    <iconset theme="help-about">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>À p&amp;ropos</string>
@@ -352,7 +386,9 @@
   </action>
   <action name="actionAideContextuelle">
    <property name="icon">
-    <iconset theme="help-contents"/>
+    <iconset theme="help-contents">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Aide contextuelle</string>
@@ -363,7 +399,9 @@
   </action>
   <action name="actionProposQt">
    <property name="icon">
-    <iconset theme="help-about"/>
+    <iconset theme="help-about">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>À propos de &amp;Qt</string>
@@ -371,7 +409,9 @@
   </action>
   <action name="actionClearEnvironment">
    <property name="icon">
-    <iconset theme="edit-clear"/>
+    <iconset theme="edit-clear">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Réinitialiser l'environnement</string>
@@ -379,7 +419,9 @@
   </action>
   <action name="actionClearObject">
    <property name="icon">
-    <iconset theme="edit-clear"/>
+    <iconset theme="edit-clear">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Réinitialiser l'objet</string>
