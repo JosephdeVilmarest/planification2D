@@ -55,8 +55,12 @@ class Cell():
         self.trap = [(x,yMax),(sMax.lastX,sMax.lastY),
                      (sMin.lastX,sMin.lastY),(x,yMin)]
         self.bar = barycenterInt(self.trap)
+        self.xMin = sMin.lastX
+        self.xMax = x
+        self.leftHeight = sMax.lastY-sMin.lastY
         self.rightHeight = yMax-yMin
-        if sMin.lastY != sMax.lastY:
+        self.previousCells = []
+        if self.leftHeight:
             self.isEmpty = False
             if sMin.lastCell:
                 sMin.lastCell.addNext(self)
@@ -64,10 +68,14 @@ class Cell():
             if sMax.lastCell:
                 sMax.lastCell.addNext(self)
             sMax.lastCell = None
+            if sMax.lastCell:
+                self.previousCells.append(sMax.lastCell)
         if self.rightHeight:
             self.isEmpty = False
             sMin.lastCell = self
             sMax.lastCell = self
+            if not len(self.previousCells) or self.previousCells[-1] != sMin.lastCell and sMin.lastCell:
+                self.previousCells.append(sMin.lastCell)
         sMin.lastX = x
         sMax.lastX = x
         sMin.lastY = yMin

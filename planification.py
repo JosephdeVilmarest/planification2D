@@ -572,7 +572,7 @@ class Main(*loadUiType("planification.ui")):
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes")
         
-        #Step(self, [b,c])
+        Step(self, [b,c])
 
         #Step(self, parent = a)
         #a=(Step(self, self.hiddenStep,
