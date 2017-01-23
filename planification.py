@@ -557,7 +557,7 @@ class Main(*loadUiType("planification.ui")):
 
         self.convDecomp = Step(self, self.hiddenStep, convexDecompositionValidation2,
                                convexDecompositionTransformation2,
-                               "Décomposition en\npolygones convexes\n(optimale", image="images/convexes.png")
+                               "Décomposition en\npolygones convexes\n(optimale)", image="images/convexes.png")
         self.convDecomp2 = Step(self, self.hiddenStep, convexDecompositionValidation,
                                convexDecompositionTransformation,
                                "Décomposition en\npolygones convexes\n(non optimale)", image="images/convexes.png")
@@ -576,7 +576,7 @@ class Main(*loadUiType("planification.ui")):
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes", image="images/trap.png")
         
-        Step(self, c,#[b,c],
+        Step(self, [b,c],
              dijkstraValidation,
              dijkstraTransformation,
              "Plus court\nchemin", image="images/dijk.png")
@@ -702,7 +702,7 @@ Janvier 2017
 
             self.on_actionNouveau_triggered()
             e = [ptsToPoly(p,l) for p in e]
-            o = ptsToPoly(o,l)
+            o = ptsToPoly([(20*x,20*y) for (x,y) in o],l)
             for p in o:
                 self.object.addController(p)
             for p in e:

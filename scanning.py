@@ -80,6 +80,9 @@ class Cell():
         sMax.lastY = yMax
         self.nextCells = []
 
+    def __hash__(self):
+        return id(self)
+
     def addNext(self,cell):
         self.nextCells.append(cell)
         cell.previousCells.append(self)

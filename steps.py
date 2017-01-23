@@ -82,11 +82,10 @@ def minkovskySumValidation(environment, object, *conf):
 def minkovskySumTransformation(environment, object, *conf):
     if len(object) == 1:
         return [environment]+list(conf),[]
-    print(environment, object)
     envi = MinkowskiSum(environment, object)
     items = []
     for p in envi:
-        items.append((p, (220,220,220,240),(220,220,220,20)))
+        items.append((p, (220,220,220,180),(220,220,220,20)))
     return [envi]+list(conf),items
 
 
@@ -99,12 +98,13 @@ def unificationTransformation(environment, *conf):
     e = []
     for i in environment:
         p = QPolygon([QPoint(*i) for  i in i]+[QPoint(*i[0])])
-        for k,q in enumerate(e):
-            if len(q.intersected(p)):
-                e[k] = q.united(p)
-                break
-        else:
-            e.append(p)
+        i = 0
+        while i != len(e):
+            if len(e[i].intersected(p)):
+                p = e.pop(i).united(p)
+            else:
+                i += 1
+        e.append(p)
     lim = QPolygon([QPoint(0,0),QPoint(0,LEN),QPoint(LEN,LEN),QPoint(LEN,0)])
     envi = [[(q.x(),q.y()) for q in p.intersected(lim)[:-1]] for p in e]
     for po in envi:
@@ -115,13 +115,13 @@ def unificationTransformation(environment, *conf):
                 po.reverse()
     items = []
     for p in envi:
-        items.append((p, (220,220,220,240),(220,220,220,100)))
+        items.append((p, (200,200,200,250),(220,220,220,100)))
     return [envi]+list(conf),items
 
 
 ########### Décomposition en cellules ############
 # Pas de point / segment seul + pas de superposition
-def cellDecompositionValidation(environment, *conf):
+def cellDecompositionValidation(environment, posi,posf,*conf):
     for i in environment:
         if len(i)<3:
             return "Obstacle plat (point ou segment)"
@@ -130,37 +130,48 @@ def cellDecompositionValidation(environment, *conf):
             if len(QPolygon([QPoint(*p) for p in environment[i]]).intersected(
                 QPolygon([QPoint(*p) for p in environment[j]]))):
                 return "Obstacles superposés"
-    return ""
+    return visibilityGraphValidation(environment,posi,posf)
 
-def cellDecompositionTransformation(environment, *conf):
+def cellDecompositionTransformation(environment, posi, posf, *conf):
     s = scanning(environment, LEN)
     items = []
-    pts = []
+    pts = [posi,posf]
     cps = []
+    ind = []
     for i,p in enumerate(s):
         rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
         #items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
         items.append((p.trap, (rvb[0], rvb[1], rvb[2],150),(rvb[0], rvb[1], rvb[2],80)))
+
         pi = len(pts)
         pts.append(p.bar)
+        po = QPolygon([QPoint(*p) for p in p.trap])
+        if po.containsPoint(QPoint(*posi),0):
+            cps.append((pi,0))
+            items.append(((posi, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+        if po.containsPoint(QPoint(*posf),0):
+            cps.append((pi,1))
+            items.append(((posf, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+    
+        p.nextSharedPos = {}
         for c in p.previousCells:
-            if c.rightHeight >= p.leftHeight:
-                o=(p.xMax, p.leftY)
-                items.append(((p.bar,(p.xMin, p.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
-            else:
-                o=(p.xMin, c.rightY)
-                items.append(((p.bar,(p.xMin, c.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
-            pts.append((pi,pts.index(o)))
+            pt = c.nextSharedPos[p]
+            cps.append((pi,pt))
+            items.append(((p.bar,pts[pt]),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
         for c in p.nextCells:
-            cps.append(pi,len(pts))
-            if p.rightHeight < c.leftHeight:
+            p.nextSharedPos[c] = len(pts)
+            cps.append((pi,len(pts)))
+            if p.rightHeight <= c.leftHeight:
                 pts.append((p.xMax, p.rightY))
-                items.append(((p.bar,(p.xMax, p.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+                items.append(((p.bar,(p.xMax, p.rightY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
             else:
                 pts.append((p.xMax, c.leftY))
-                items.append(((p.bar,(p.xMax, c.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
-    
-    return [],items
+                items.append(((p.bar,(p.xMax, c.leftY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+    m = [[0]*len(pts) for _ in range(len(pts))]
+    for i in cps:
+        m[i[0]][i[1]]=1
+        m[i[1]][i[0]]=1
+    return [pts,m],items
 
 
 
@@ -195,10 +206,7 @@ def dijkstraValidation(pts, ma, *conf):
     return ""
 
 def dijkstraTransformation(pts, ma, *conf):
-    print("hum")
-    print(pts, ma)
     p = dijkstra(pts,ma)
-    print(p)
     items = []
     for i in range(len(p)-1):
         items.append(((p[i],p[i+1]), (0,0,0),(0,0,0)))
