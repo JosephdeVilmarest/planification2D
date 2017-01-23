@@ -22,7 +22,7 @@ def interieur(polygone, point):
             return False
     return True
 
-def get_convex(polygon):
+def get_convex(polygon, opti=False):
     #on renvoie une liste de polygones convexes dont 
     #l'union (disjointe) est egale au polygone de depart
     #à completer: pour l'instant on prend des polygones convexes ^^
@@ -92,11 +92,18 @@ def get_convex(polygon):
                 p0, p1 = decoupe(p,k,j)
                 #print(p,k,j,p0,p1)
                 if len(p0)>2 and len(p1)>2:
-                    v0,l0 = best(p0)
-                    v1,l1 = best(p1)
-                    v = v1+v0+1
-                    if v < m[0]:
-                        m = v, l0+l1
+                    if opti:
+                        v0,l0 = best(p0)
+                        v1,l1 = best(p1)
+                        v = v1+v0+1
+                        if v < m[0]:
+                            m = v, l0+l1
+                    else:
+                        v = -len(p0)*len(p1)
+                        if v < m[0]:
+                            m = v, (p0,p1)
+        if not opti:
+            m = m[0], best(m[1][0])[1]+best(m[1][1])[1]
         connus[p] = m
         return m
     
@@ -167,9 +174,15 @@ def sum_Minkowski(polygone, objet):
 def convexDecomposition(environment):
     convex = []
     for polygon in environment:
-        convex.extend(get_convex(polygon))
+        convex.extend(get_convex(polygon, opti=False))
     return convex
     
+def convexDecomposition2(environment):
+    convex = []
+    for polygon in environment:
+        convex.extend(get_convex(polygon, opti=True))
+    return convex
+
 
 def simplify(lobstacles, objet = []):
     #l est la liste des obstacles: liste de polygones
