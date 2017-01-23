@@ -22,86 +22,10 @@ def interieur(polygone, point):
             return False
     return True
 
-def is_angle_convex(p1,p2,p3):
-    return ((p3[1]-p2[1])*(p2[0]-p1[0])-(p3[0]-p2[0])*(p2[1]-p1[1])>=0)
-
-def get_convex(polygone):
+def get_convex(polygon):
     #on renvoie une liste de polygones convexes dont 
     #l'union (disjointe) est egale au polygone de depart
     #à completer: pour l'instant on prend des polygones convexes ^^
-    n=len(polygone)
-    i=0
-    while True:
-        while not(is_angle_convex(polygone[i],
-                polygone[(i+1)%n],polygone[(i+2)%n])):
-            #on trouve un premier "point convexe"
-            i=(i+1)%n
-        i0=i
-        i=(i+1)%n
-        while is_angle_convex(polygone[i],
-                polygone[(i+1)%n],polygone[(i+2)%n]) and (i!=i0):
-            #on trouve un "point concave" s'il existe
-            i=(i+1)%n
-        print("i vaut", i)
-        if (i==i0):
-            #le polygone est convexe
-            print("le polygone est convexe",polygone)
-            return [polygone]
-        j=(i-1)%n
-        flag=True
-        while is_angle_convex(polygone[i],
-                polygone[(i+1)%n],polygone[j]) and flag and (j!=i):
-            #on cherche un grand sous-polygone convexe
-            print(j)
-            if j<(i+1)%n:
-                pol=polygone[j:(i+2)]
-                for k in range(j):
-                    if interieur(pol,polygone[k]):
-                        flag=False
-                for k in range(i+2,n):
-                    if interieur(pol,polygone[k]):
-                        flag=False
-            else:
-                pol=polygone[j:]+polygone[:(i+2)]
-                for k in range(i+2,j):
-                    if interieur(pol,polygone[k]):
-                        flag=False
-            j=(j-1)%n
-
-        j=(j+1)%n
-        if not(flag):
-            j=(j+1)%n
-        print("j vaut ",j)
-
-        if j==(i-1)%n:
-            #on n'a qu'un segment
-            i+=1
-
-        else:
-            if j<(i+1)%n:
-                ans=get_convex(polygone[(i+1):]+polygone[:(j+1)])
-                ans.extend(get_convex(polygone[j:(i+2)]))
-            else:
-                ans=get_convex(polygone[(i+1)%n:(j+1)])
-                ans.extend(get_convex(polygone[j:]+polygone[:(i+2)]))
-            return ans
-
-def get_convex(polygon):
-    def best(p):
-        if convexe(p): return 0,[]
-        if p in connus: return connus[p]
-        l = lapartiedeldansp
-        m = len(p)**2, None
-        for a in l:
-            p1,p2 = coupeen2(p,a)
-            v1,a1 = best(p1)
-            v2,a2 = best(p2)
-            v = 1+v1+v2
-            if v<m[0]: m = v, a1+a2+[a]
-        return m
-    def coupeen2(p,a):
-        i,j = a
-        return p[a]
     def coupe(i,j):
         """Tells if the (i;j) edge is in the polygon"""
         l = len(polygon)
@@ -115,12 +39,84 @@ def get_convex(polygon):
         a3 = atan2(polygon[j][0]-polygon[i][0],polygon[j][1]-polygon[i][1])
         if a3<a1 : a3+=2*pi
         return a3<a2
-    l = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i-1) if coupe(i,j)]
+    #l2 = [[polygon[i],polygon[j]] for i in range(len(polygon)) for j in range(i-1) if coupe(i,j)]
+    l=[]
+    
+    def recalcl():
+        l.clear()
+        for i in range(len(polygon)):
+            for j in range(i-1):
+                if coupe(i,j):
+                    l.append((j,i))
+#print("")
+    recalcl()
     connus = {}
-    #print("")
-    return l#best(tuple(polygone))[0]
+#    print(polygon)
+#    print(l)
+
+    def convexe(p):
+        a,b = (p-1)%n, (p+1)%n
+        return (min(a,b),max(a,b)) in l
+    #print(len(polygon))
+    if False:
+#        retires = []
+        while True:
+            n = len(polygon)
+            for p in range(len(polygon)):
+                a,b = (p-1)%n, (p+1)%n
+                if convexe(p) and convexe(b) and convexe(a):
+                    del polygon[p]        
+                    recalcl()
+                    break
+            else:
+                break
+    #print(len(polygon))
+
+    app,appc = 0,0
+    tt=0
+    def best(p):
+        nonlocal app, appc, tt
+        app+=1
+        p=tuple(p)
+        if p in connus:
+            appc+=1
+            return connus[p]
+        #t=time()
+        if all((p[i],p[j]) in l for i in range(len(p)) for j in range(i+2, len(p) if i>0 else len(p)-1)):
+            connus[p] = 0,[p]
+            return 0,[p]
+        m = 10000, None
+        for i,a in enumerate(l):
+            k,j = a
+            if k in p and j in p:
+                p0, p1 = decoupe(p,k,j)
+                #print(p,k,j,p0,p1)
+                if len(p0)>2 and len(p1)>2:
+                    v0,l0 = best(p0)
+                    v1,l1 = best(p1)
+                    v = v1+v0+1
+                    if v < m[0]:
+                        m = v, l0+l1
+        connus[p] = m
+        return m
+    
+    ret = [[polygon[i] for i in p] for p in best(range(len(polygon)))[1]]
+    #print(app,appc,time()-tt2,tt)
+    return ret
+    #return l#best(tuple(polygone))[0]
 
 
+def decoupe(p, k, j):
+    p0, p1 = [], []
+    for i in range(len(p)):
+        p0.append(p[i])
+        if p[i]==k: break
+    for i in range(i,len(p)):
+        p1.append(p[i])
+        if p[i]==j: break
+    p0.extend(p[i:])
+    return p0, p1
+        
 def angle_normal(polygone, epsilon):
     #on renvoie la liste des angles entre -pi et pi des normales aux aretes
     #epsilon=1 correspond aux obstacles: normales extérieures

@@ -1,7 +1,7 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.uic import loadUiType
-import sys
+from sys import argv
 from colorsys import hsv_to_rgb
 
 from random import randint
@@ -556,21 +556,21 @@ class Main(*loadUiType("planification.ui")):
 
         self.convDecomp = Step(self, self.hiddenStep, convexDecompositionValidation,
                                convexDecompositionTransformation,
-                               "Décomposition en\npolygones convexes")
+                               "Décomposition en\npolygones convexes", image="images/convexes.png")
         a = Step(self, self.convDecomp, minkovskySumValidation,
                  minkovskySumTransformation,
-                 "Somme de\nMinkowski")
+                 "Somme de\nMinkowski", image="images/minkow.png")
         a = Step(self, a, unificationValidation,
                  unificationTransformation,
-                 "Unification")
+                 "Unification", image="images/unif.png")
         c = Step(self, a, visibilityGraphValidation,
              visibilityGraphTransformation,
-             "Graphe de\nvisibitlité")
+             "Graphe de\nvisibitlité", image="images/visi.png")
         #Step(a)
         b = Step(self, a,
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
-                "Décomposition en\ntrapèzes")
+                "Décomposition en\ntrapèzes", image="images/trap.png")
         
         #Step(self, [b,c])
 
@@ -650,7 +650,7 @@ Logiciel de visualisation d'aglorithmes<br> de planification
 du mouvement.
 <br><br>
 Joseph Moullart De Vilmarest,<br>
-Marc Courdiau, Baptiste Pauget<br><br>
+Marc Coudriau, Baptiste Pauget<br><br>
 Janvier 2017
 """)
         
@@ -732,7 +732,7 @@ def convex(p):
     l = [p]
     return [QGraphicsPolygonItem(QPolygonF([QPointF(*i) for i in p])) for p in l],l
 
-app = QApplication(sys.argv)
+app = QApplication(argv)
 fen = Main()
 fen.show()
 app.exec()
