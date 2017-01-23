@@ -37,7 +37,7 @@ def dijkstra(S,M):
         else:
             #on marque le chemin optimal trouve pour imin
             visite[imin]=1
-            chemins[imin]=chemins[distances[imin][1]]+[S[distances[imin][1]][0]]
+            chemins[imin]=chemins[distances[imin][1]]+[S[distances[imin][1]]]
 
             #on met a jour les distances grace au nouveau chemin optimal
             for i in range(1,n):
