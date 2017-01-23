@@ -18,7 +18,7 @@ def dijkstra(S,M):
     
     #on stocke dans distances la longueur du meilleur chemin connu
     #on stocke egalement le dernier sommet par lequel on passerait
-    distances=[(M[i][0]*eucl_dist(S[0][0],S[i][0]), 0) for i in range(n)]
+    distances=[(M[i][0]*eucl_dist(S[0],S[i]), 0) for i in range(n)]
 
     chemins=[[] for i in range(n)]
 
@@ -42,13 +42,13 @@ def dijkstra(S,M):
             #on met a jour les distances grace au nouveau chemin optimal
             for i in range(1,n):
                 if (not(visite[i]) and M[imin][i] and (distances[i][0]==0
-                        or (distances[imin][0]+eucl_dist(S[imin][0],S[i][0])
+                        or (distances[imin][0]+eucl_dist(S[imin],S[i])
                                                         <distances[i][0]))):
                     distances[i]=[distances[imin][0]
-                                        +eucl_dist(S[imin][0],S[i][0]),imin]
+                                        +eucl_dist(S[imin],S[i]),imin]
     
     #on teste si on a trouve un chemin
     if visite[1]:
-        return chemins[1]+[S[1][0]]
+        return chemins[1]+[S[1]]
 
-    return 0
+    return []

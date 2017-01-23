@@ -42,6 +42,23 @@ def convexDecompositionTransformation(environment, *conf):
     # !!!! TEMPORAIRE : envi.
     return [envi]+list(conf),items
 
+########### Décomposition en convexes ############
+# Suppose l'environement dans le sens trigo
+def convexDecompositionValidation2(environment, *conf):
+    if not len(environment): return ""
+    for p in environment:
+        if polyIsCrossed(p):
+            return "Polygone(s) de l'environnement croisé(s)"
+    return ""
+
+def convexDecompositionTransformation2(environment, *conf):
+    envi = convexDecomposition2(environment)
+    items = []
+    for i,p in enumerate(envi) :
+        rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
+        items.append((p,(200,0,250,255),(rvb[0], rvb[1], rvb[2])))
+    # !!!! TEMPORAIRE : envi.
+    return [envi]+list(conf),items
 
 
 ########### Somme de Minkovsky ############
@@ -118,12 +135,17 @@ def cellDecompositionValidation(environment, *conf):
 def cellDecompositionTransformation(environment, *conf):
     s = scanning(environment, LEN)
     items = []
+    pts = []
+    cps = []
     for i,p in enumerate(s):
         rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
         #items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
         items.append((p.trap, (rvb[0], rvb[1], rvb[2],150),(rvb[0], rvb[1], rvb[2],80)))
+        pi = len(pts)
+        pts.append(p.bar)
         for c in p.previousCells:
             if c.rightHeight >= p.leftHeight:
+                
                 items.append(((p.bar,(p.xMin, p.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
                 items.append(((p.bar,(p.xMin, c.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
@@ -132,7 +154,7 @@ def cellDecompositionTransformation(environment, *conf):
                 items.append(((p.bar,(p.xMax, p.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
                 items.append(((p.bar,(p.xMax, c.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
-
+    
     return [],items
 
 
@@ -171,6 +193,8 @@ def dijkstraTransformation(pts, ma, *conf):
     print("hum")
     print(pts, ma)
     p = dijkstra(pts,ma)
+    print(p)
     items = []
     for i in range(len(p)-1):
-        items.append(((p[i],p[i+1]), (0,0,0),(0,0,0,0)))
+        items.append(((p[i],p[i+1]), (0,0,0),(0,0,0)))
+    return [],items

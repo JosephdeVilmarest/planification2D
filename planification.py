@@ -555,10 +555,13 @@ class Main(*loadUiType("planification.ui")):
         self.currentItem = None
         self.hiddenStep = Step(self)
 
-        self.convDecomp = Step(self, self.hiddenStep, convexDecompositionValidation,
+        self.convDecomp = Step(self, self.hiddenStep, convexDecompositionValidation2,
+                               convexDecompositionTransformation2,
+                               "Décomposition en\npolygones convexes\n(optimale", image="images/convexes.png")
+        self.convDecomp2 = Step(self, self.hiddenStep, convexDecompositionValidation,
                                convexDecompositionTransformation,
-                               "Décomposition en\npolygones convexes", image="images/convexes.png")
-        a = Step(self, self.convDecomp, minkovskySumValidation,
+                               "Décomposition en\npolygones convexes\n(non optimale)", image="images/convexes.png")
+        a = Step(self, [self.convDecomp,self.convDecomp2], minkovskySumValidation,
                  minkovskySumTransformation,
                  "Somme de\nMinkowski", image="images/minkow.png")
         a = Step(self, a, unificationValidation,
@@ -573,10 +576,10 @@ class Main(*loadUiType("planification.ui")):
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes", image="images/trap.png")
         
-        Step(self, [b,c],
+        Step(self, c,#[b,c],
              dijkstraValidation,
              dijkstraTransformation,
-             "Plus court\nchemin")
+             "Plus court\nchemin", image="images/dijk.png")
 
         #Step(self, parent = a)
         #a=(Step(self, self.hiddenStep,
