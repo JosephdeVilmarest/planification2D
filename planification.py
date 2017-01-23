@@ -568,12 +568,15 @@ class Main(*loadUiType("planification.ui")):
              visibilityGraphTransformation,
              "Graphe de\nvisibitlité", image="images/visi.png")
         #Step(a)
-        b = Step(self, self.hiddenStep,#a,
+        b = Step(self, a,
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes", image="images/trap.png")
         
-        #Step(self, [b,c])
+        Step(self, [b,c],
+             dijkstraValidation,
+             dijkstraTransformation,
+             "Plus court\nchemin")
 
         #Step(self, parent = a)
         #a=(Step(self, self.hiddenStep,

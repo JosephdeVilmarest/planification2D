@@ -57,6 +57,8 @@ class Cell():
         self.bar = barycenterInt(self.trap)
         self.xMin = sMin.lastX
         self.xMax = x
+        self.leftY = (sMin.lastY+sMax.lastY)//2
+        self.rightY = (yMin+yMax)//2
         self.leftHeight = sMax.lastY-sMin.lastY
         self.rightHeight = yMax-yMin
         self.previousCells = []

@@ -140,8 +140,8 @@ def sum_Minkowski(polygone, objet):
         i0=(i0+1)%n
     i=i0 #indice de parcours de ap
     j=1  #indice de parcours de ao
-    S=[(polygone[i][0]-(objet[1][0]-objet[0][0]), 
-                        polygone[i][1]-(objet[1][1]-objet[0][1]))]
+    S=[(polygone[i][0]-(objet[1][0]-0*objet[0][0]), 
+                        polygone[i][1]-(objet[1][1]-0*objet[0][1]))]
     P=S[0]  #dernier point utilisé
     a=ao[0] #dernier angle utilisé
     flag=True

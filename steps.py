@@ -2,6 +2,7 @@ from simplify import *
 from scanning import scanning
 from colorsys import hsv_to_rgb
 from math import atan2
+from dijkstra import dijkstra
 from commun import *
 from visibility import visibility_graph
 from PyQt4.QtGui import QPolygon
@@ -39,7 +40,7 @@ def convexDecompositionTransformation(environment, *conf):
         rvb = [int(o*255) for o in hsv_to_rgb((30*i%360)/360, 1,1)]
         items.append((p,(200,0,250,255),(rvb[0], rvb[1], rvb[2])))
     # !!!! TEMPORAIRE : envi.
-    return [environment]+list(conf),items
+    return [envi]+list(conf),items
 
 
 
@@ -123,14 +124,15 @@ def cellDecompositionTransformation(environment, *conf):
         items.append((p.trap, (rvb[0], rvb[1], rvb[2],150),(rvb[0], rvb[1], rvb[2],80)))
         for c in p.previousCells:
             if c.rightHeight >= p.leftHeight:
-                items.append(((p.bar,(p.xMin, p.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+                items.append(((p.bar,(p.xMin, p.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
-                items.append(((p.bar,(p.xMin, c.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+                items.append(((p.bar,(p.xMin, c.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
         for c in p.nextCells:
             if p.rightHeight < c.leftHeight:
-                items.append(((p.bar,(p.xMax, p.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+                items.append(((p.bar,(p.xMax, p.rightY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
             else:
-                items.append(((p.bar,(p.xMax, c.bar[1])), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+                items.append(((p.bar,(p.xMax, c.leftY)), (rvb[0]//2, rvb[1]//2, rvb[2]//2),(0,0,0,0)))
+
     return [],items
 
 
@@ -157,6 +159,18 @@ def visibilityGraphTransformation(environment, posI, posF, *conf):
     for i in range(len(s)):
         for j in range(i):
             if m[i][j]:
-                items.append(((s[i][0],s[j][0]), (0,180,50),(0,0,0,0)))
-    return [],items
+                items.append(((s[i],s[j]), (0,180,50),(0,0,0,0)))
+    return [s,m],items
 
+########### Dijkstra ############
+#
+def dijkstraValidation(pts, ma, *conf):
+    return ""
+
+def dijkstraTransformation(pts, ma, *conf):
+    print("hum")
+    print(pts, ma)
+    p = dijkstra(pts,ma)
+    items = []
+    for i in range(len(p)-1):
+        items.append(((p[i],p[i+1]), (0,0,0),(0,0,0,0)))
