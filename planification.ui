@@ -16,39 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,1">
     <item>
-     <widget class="QWidget" name="widget_2" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="steps"/>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
+     <layout class="QGridLayout" name="steps"/>
     </item>
     <item>
      <widget class="Line" name="line">
@@ -132,6 +100,9 @@
              </colorrole>
             </disabled>
            </palette>
+          </property>
+          <property name="acceptDrops">
+           <bool>false</bool>
           </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
@@ -232,6 +203,9 @@
              </disabled>
             </palette>
            </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
@@ -283,7 +257,7 @@
    </widget>
    <widget class="QMenu" name="menuPlanification">
     <property name="title">
-     <string>&amp;Planification</string>
+     <string>&amp;Plannification</string>
     </property>
    </widget>
    <addaction name="menuFichier"/>
@@ -376,9 +350,7 @@
   </action>
   <action name="actionPropos">
    <property name="icon">
-    <iconset theme="help-about">
-     <normaloff/>
-    </iconset>
+    <iconset theme="help-about"/>
    </property>
    <property name="text">
     <string>À p&amp;ropos</string>
@@ -386,9 +358,7 @@
   </action>
   <action name="actionAideContextuelle">
    <property name="icon">
-    <iconset theme="help-contents">
-     <normaloff/>
-    </iconset>
+    <iconset theme="help-contents"/>
    </property>
    <property name="text">
     <string>&amp;Aide contextuelle</string>
@@ -399,9 +369,7 @@
   </action>
   <action name="actionProposQt">
    <property name="icon">
-    <iconset theme="help-about">
-     <normaloff/>
-    </iconset>
+    <iconset theme="help-about"/>
    </property>
    <property name="text">
     <string>À propos de &amp;Qt</string>
@@ -409,9 +377,7 @@
   </action>
   <action name="actionClearEnvironment">
    <property name="icon">
-    <iconset theme="edit-clear">
-     <normaloff/>
-    </iconset>
+    <iconset theme="edit-clear"/>
    </property>
    <property name="text">
     <string>Réinitialiser l'environnement</string>
@@ -419,9 +385,7 @@
   </action>
   <action name="actionClearObject">
    <property name="icon">
-    <iconset theme="edit-clear">
-     <normaloff/>
-    </iconset>
+    <iconset theme="edit-clear"/>
    </property>
    <property name="text">
     <string>Réinitialiser l'objet</string>

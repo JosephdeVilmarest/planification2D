@@ -543,6 +543,7 @@ class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
         super().__init__(*args)
         self.setupUi(self)
+        self.setAcceptDrops(True)
         self.setWindowIcon(QIcon("images/tracer.png"))
         self.enr = ""
         self.splitter_2.setSizes([300,150,150])
@@ -648,6 +649,16 @@ class Main(*loadUiType("planification.ui")):
         self.object.polyChanged.connect(self.updateObject)
         self.updatePipeLine()
        
+    def dragEnterEvent(self,de):
+        print(de.mimeData().formats())
+        if de.mimeData().hasUrls():
+            de.acceptProposedAction()
+
+    def dragMoveEvent(self,de):
+        de.acceptProposedAction()
+        
+    def dropEvent(self,de):
+        self.open(de.mimeData().urls()[0].path())
 
     @pyqtSlot()
     def on_actionNouveau_triggered(self):
@@ -707,34 +718,36 @@ Janvier 2017
         self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
                              obj.name.replace('\n', ' ')+"</font><br> &#160;&#160;&#160;&#160;"+arg)
 
+    def open(self, a):
+        try:
+            f = open(a)
+            l = eval(f.readline()[:-1])
+            e = eval(f.readline()[:-1])
+            o = eval(f.readline()[:-1])
+            pb = eval(f.readline()[:-1])
+        except:
+            self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
+                                  a+"</font><br> &#160;&#160;&#160;&#160;Fichier incorrect")
+            return
+
+        self.on_actionNouveau_triggered()
+        self.enr = a
+        e = [ptsToPoly(p,l) for p in e]
+        o = ptsToPoly(o,l)
+        for p in o:
+            self.object.addController(p)
+        for p in e:
+            for p in p:
+                self.environment.addController(p)
+            self.environment.setCurrentController(None)
+        self.environment.initialPos.setPos(QPointF(pb[0][0]*100/l,pb[0][1]*100/l))
+        self.environment.finalPos.setPos(QPointF(pb[1][0]*100/l,pb[1][1]*100/l))
+
     @pyqtSlot()
     def on_actionOuvrir_triggered(self):
         a = QFileDialog.getOpenFileName(self, "Ouvrir", self.enr, "Fichier de plannification (*.pln)")
         if len(a):
-            try:
-                f = open(a)
-                l = eval(f.readline()[:-1])
-                e = eval(f.readline()[:-1])
-                o = eval(f.readline()[:-1])
-                pb = eval(f.readline()[:-1])
-            except:
-                self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
-                                      a+"</font><br> &#160;&#160;&#160;&#160;Fichier incorrect")
-                return
-
-            self.on_actionNouveau_triggered()
-            self.enr = a
-            e = [ptsToPoly(p,l) for p in e]
-            o = ptsToPoly(o,l)
-            for p in o:
-                self.object.addController(p)
-            for p in e:
-                for p in p:
-                    self.environment.addController(p)
-                self.environment.setCurrentController(None)
-            self.environment.initialPos.setPos(QPointF(pb[0][0]*100/l,pb[0][1]*100/l))
-            self.environment.finalPos.setPos(QPointF(pb[1][0]*100/l,pb[1][1]*100/l))
-
+            self.open(a)
     @pyqtSlot()
     def on_actionEnregistrer_triggered(self):
         self.save()
