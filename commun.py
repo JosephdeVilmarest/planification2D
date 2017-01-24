@@ -32,3 +32,10 @@ def barycenter(l):
 def barycenterInt(l):
     """ Calcul le barycentre d'une liste de points version entier"""
     return tuple(map(int,barycenter(l)))
+
+def isDirect(po):
+    """ Vérifie si le polygone est en sens direct """
+    if len(po) <= 2 : return True
+    ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
+    return det(po[(ind+1)%len(po)],pt,po[(ind-1)%len(po)]) >= 0
+    

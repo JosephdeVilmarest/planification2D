@@ -358,8 +358,8 @@ class PolyScene(QGraphicsScene):
         if self.currentController:
             self.directLine = QGraphicsLineItem(QLineF(self.currentController.pos(),
                                                        self.currentController.next.pos()))
-            self.directLine.setPen(QPen(QColor(255,0,0)))
-            self.directLine.setZValue(-.5)
+            self.directLine.setPen(QPen(QColor(0,0,255)))
+            self.directLine.setZValue(+.5)
             self.addItem(self.directLine)
 
     def mousePressEvent(self, me):
@@ -426,11 +426,8 @@ class PolyScene(QGraphicsScene):
     def environment(self, LEN):
         polygons = [[(int(LEN*p[0].x()/100), int(LEN*p[0].y()/100)) for p in i.ctrl] for i in self.polygons]
         for po in polygons:
-            if len(po) > 2 :
-                ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
-                if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
-                    (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
-                    po.reverse()
+            if not isDirect(po):
+                po.reverse()
         return polygons
 
     def clear(self):
@@ -507,6 +504,11 @@ class ObjectScene(PolyScene):
         y/=len(l)
         return [(int((i[0]-x)/5+.5), int((i[1]-y)/5+.5)) for i in l]
 
+    def environmentSave(self,l):
+        l = PolyScene.environment(self, l)
+        if len(l): return l[0]
+        return []
+
     def removeController(self, ctrl):
         ctrl.previous.next = ctrl.next
         ctrl.next.previous = ctrl.previous
@@ -529,7 +531,9 @@ class ObjectScene(PolyScene):
         if self.currentController:
             self.currentController.setCurrent(True)
         self.updateDirectLine()
-
+# Problèmes:
+# visi qui n'a que faire des limites
+# obstacles toriques...
         
 class Main(*loadUiType("planification.ui")):
     def __init__(self, *args):
@@ -702,7 +706,7 @@ Janvier 2017
 
             self.on_actionNouveau_triggered()
             e = [ptsToPoly(p,l) for p in e]
-            o = ptsToPoly([(20*x,20*y) for (x,y) in o],l)
+            o = ptsToPoly(o,l)
             for p in o:
                 self.object.addController(p)
             for p in e:
@@ -733,7 +737,7 @@ Janvier 2017
             f = open(self.enr, mode='w')
             f.write(str(LEN)+"\n")
             f.write(str(self.environment.environment(LEN))+ "\n" +
-                    str(self.object.environment(LEN))+ "\n")
+                    str(self.object.environmentSave(LEN))+ "\n")
             f.close()
 def convex(p):
     l = [p]

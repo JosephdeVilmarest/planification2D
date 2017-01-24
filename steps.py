@@ -108,15 +108,46 @@ def unificationTransformation(environment, *conf):
     lim = QPolygon([QPoint(0,0),QPoint(0,LEN),QPoint(LEN,LEN),QPoint(LEN,0)])
     envi = [[(q.x(),q.y()) for q in p.intersected(lim)[:-1]] for p in e]
     for po in envi:
-        if len(po) > 2 :
-            ind, pt = max(enumerate(po), key = lambda i : i[1][0]*LEN+i[1][1])
-            if ((po[(ind+1)%len(po)][0]-pt[0])*(po[(ind-1)%len(po)][1]-pt[1])-
-                (po[(ind+1)%len(po)][1]-pt[1])*(po[(ind-1)%len(po)][0]-pt[0])) <0:
-                po.reverse()
+        if not isDirect(po):
+            po.reverse()
+    nvEnvi = []
+    for p in envi:
+        s = set(p)
+        if len(s) != len(p):
+            k = 1
+            while k < len(p):
+                if p[k-1]==p[k]:
+                    p.pop(k)
+                else:
+                    k+=1
+            print(p)
+            print(-(len(s) - len(p)))
+            k = 0
+            while not p[k] in p[:k]:
+                k += 1
+            l = p.index(p[k])
+            p0 = p[l:k]
+            p1 = p[:l]+p[k+1:]
+            if min(p0, key=lambda e:e[0])[0] > min(p1, key=lambda e:e[0])[0]:
+                if isDirect(p0):
+                    p0.reverse()
+                nvEnvi.append(p0)
+                p = p1
+            else:
+                if isDirect(p1):
+                    p1.reverse()
+                nvEnvi.append(p1)
+                p = p0
+        nvEnvi.append(p)
+            
+    #envi = nvEnvi
     items = []
     for p in envi:
-        items.append((p, (200,200,200,250),(220,220,220,100)))
-    return [envi]+list(conf),items
+        items.append((p, (140,140,140,0),(220,220,220,100)))
+    for p in nvEnvi:
+        items.append((p, (140,140,140,250),(220,220,220,0)))
+    
+    return [nvEnvi]+list(conf),items
 
 
 ########### Décomposition en cellules ############
@@ -125,7 +156,7 @@ def cellDecompositionValidation(environment, posi,posf,*conf):
     for i in environment:
         if len(i)<3:
             return "Obstacle plat (point ou segment)"
-    for i in range(len(environment)):
+    for i in range(0):#len(environment)):
         for j in range(i):
             if len(QPolygon([QPoint(*p) for p in environment[i]]).intersected(
                 QPolygon([QPoint(*p) for p in environment[j]]))):
