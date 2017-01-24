@@ -6,7 +6,7 @@ from dijkstra import dijkstra
 from commun import *
 from visibility import visibility_graph
 from PyQt4.QtGui import QPolygon
-from PyQt4.QtCore import QPoint
+from PyQt4.QtCore import QPoint, Qt
 
 def standardValidation(*conf):
     """ Renvoie
@@ -160,7 +160,7 @@ def unificationTransformation(environment, *conf):
 
 ########### Décomposition en cellules ############
 # Pas de point / segment seul + pas de superposition
-def cellDecompositionValidation(environment, posi,posf,*conf):
+def cellDecompositionValidation(environment, posi, posf, *conf):
     for i in environment:
         if len(i)<3:
             return "Obstacle plat (point ou segment)"
@@ -228,8 +228,8 @@ def visibilityGraphValidation(environment, posI, posF, *conf):
         p = QPolygon([QPoint(*p) for p in i])
         ni+= p.containsPoint(pi,0)
         nf+= p.containsPoint(pf,0)
-    if ni%2:return "Position intiale en colision"
-    if nf%2:return "Position finale en colision"
+    if ni%2:return "Position intiale en collision"
+    if nf%2:return "Position finale en collision"
     return ""
 
 def visibilityGraphTransformation(environment, posI, posF, *conf):
@@ -240,6 +240,31 @@ def visibilityGraphTransformation(environment, posI, posF, *conf):
             if m[i][j]:
                 items.append(((s[i],s[j]), (0,180,50),(0,0,0,0)))
     return [s,m],items
+
+
+
+########### Graphe de visibilité ############
+# Pas de point / segment seul + pas de superposition
+def graphSimplificationValidation(environment, mat, *conf):
+
+    return ""
+
+def graphSimplificationTransformation(environment, mat, *conf):
+    s=environment
+    items = []
+    pol = QPolygon(list(map(lambda x:QPoint(*x),s[2:])))
+    for i in range(len(s)):
+        for j in range(i):
+            if mat[i][j]:
+                s1 = 1.05*s[i][0]-0.05*s[j][0], 1.05*s[i][1]-0.05*s[j][1]
+                s2 = 1.05*s[j][0]-0.05*s[i][0], 1.05*s[j][1]-0.05*s[i][1]
+                if not (pol.containsPoint(QPoint(*s1), Qt.OddEvenFill) or 
+                        pol.containsPoint(QPoint(*s2), Qt.OddEvenFill)):
+                    items.append(((s[i],s[j]), (255,0,0),(0,0,0,0)))
+                else:
+                    mat[i][j] = 0
+                    mat[j][i] = 0
+    return [s,mat],items
 
 ########### Dijkstra ############
 #
