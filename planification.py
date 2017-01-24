@@ -80,6 +80,7 @@ class Step(QObject):
             try:
                 conf,items = self.transformation(*conf)
             except:
+                #raise ############## TODO
                 self.output.error(self, "Erreur inconnue")
                 return []
             for c in self.nextSteps:
@@ -578,13 +579,16 @@ class Main(*loadUiType("planification.ui")):
         c = Step(self, a, visibilityGraphValidation,
              visibilityGraphTransformation,
              "Graphe de\nvisibitlité", image="images/visi.png")
+        d = Step(self, c, graphSimplificationValidation,
+             graphSimplificationTransformation,
+             "Retrait arêtes\nentrantes", image="images/gsim.png")
         #Step(a)
         b = Step(self, a,
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes", image="images/trap.png")
         
-        Step(self, [b,c],
+        Step(self, [b,d],
              dijkstraValidation,
              dijkstraTransformation,
              "Plus court\nchemin", image="images/dijk.png")
