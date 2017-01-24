@@ -133,16 +133,13 @@ def unificationTransformation(environment, *conf):
         l = decoupe(p)
         o = [min(p,key=lambda e:e[0])[0] for p in l]
         c = min(enumerate(o),key=lambda e : e[1])[0]
-        print(o,c)
         for i in range(len(l)):
             if l[i][-1] == l[i][0]:
                 l[i] = l[i][:-1]
             if i != c and isDirect(l[i]):
-                print(i,"renv")
                 l[i].reverse()
             if l[i]:
                 nvEnvi.append(l[i])
-        for i in l : print(i)
             
     #envi = nvEnvi
     items = []

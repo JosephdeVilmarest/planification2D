@@ -638,6 +638,7 @@ class Main(*loadUiType("planification.ui")):
 
     @pyqtSlot()
     def on_actionNouveau_triggered(self):
+        self.enr = ""
         self.on_actionClearObject_triggered()
         self.on_actionClearEnvironment_triggered()
 
@@ -703,6 +704,7 @@ Janvier 2017
                 l = eval(f.readline()[:-1])
                 e = eval(f.readline()[:-1])
                 o = eval(f.readline()[:-1])
+                pb = eval(f.readline()[:-1])
             except:
                 self.messages.setText("<b><font color=\"Red\">Erreur</font></b> : <font color=\"Blue\">" +
                                       a+"</font><br> &#160;&#160;&#160;&#160;Fichier incorrect")
@@ -717,6 +719,8 @@ Janvier 2017
                 for p in p:
                     self.environment.addController(p)
                 self.environment.setCurrentController(None)
+            self.environment.initialPos.setPos(QPointF(pb[0][0]*100/l,pb[0][1]*100/l))
+            self.environment.finalPos.setPos(QPointF(pb[1][0]*100/l,pb[1][1]*100/l))
 
     @pyqtSlot()
     def on_actionEnregistrer_triggered(self):
@@ -729,7 +733,7 @@ Janvier 2017
             self.save()
             
     def getName(self):
-        a = QFileDialog.getSaveFileName(self, "Enregistrer sous", "", "Fichier de plannification (*.pln)")
+        a = QFileDialog.getSaveFileName(self, "Enregistrer sous", self.enr, "Fichier de plannification (*.pln)")
         if len(a):
             self.enr = a
         
@@ -742,6 +746,7 @@ Janvier 2017
             f.write(str(LEN)+"\n")
             f.write(str(self.environment.environment(LEN))+ "\n" +
                     str(self.object.environmentSave(LEN))+ "\n")
+            f.write(str(self.environment.controlPosition())+"\n")
             f.close()
 def convex(p):
     l = [p]
