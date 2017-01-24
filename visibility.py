@@ -37,7 +37,7 @@ def interieur(polygone, point):
     for i in range(m):
         if ((point[0]-polygone[i][0])*(polygone[i][1]-polygone[(i+1)%m][1])+
             (point[1]-polygone[i][1])*(polygone[(i+1)%m][0]-polygone[i][0])
-                                <=0):
+                                >=0):
             return False
     return True
 
