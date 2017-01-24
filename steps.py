@@ -51,6 +51,7 @@ def convexDecompositionValidation2(environment, *conf):
             return "Polygone(s) de l'environnement croisé(s)"
     return ""
 
+from time import time
 def convexDecompositionTransformation2(environment, *conf):
     envi = convexDecomposition2(environment)
     items = []
@@ -130,7 +131,6 @@ def unificationTransformation(environment, *conf):
         return [p]
         
     for p in envi:
-        print(p)
         k = 1
         while k != len(p):
             if p[k-1]==p[k]:

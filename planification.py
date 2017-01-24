@@ -67,7 +67,7 @@ class Step(QObject):
                 step.setEnabled(False)
         for p in self.parent:
             p.nextStep = self if a else None
-        self.stateChanged.emit()
+        #self.stateChanged.emit()
             
 
 
@@ -77,11 +77,11 @@ class Step(QObject):
             self.setEnabled(True)
             if self.parent and not self.button.isChecked():
                 return []
-            #try:
-            conf,items = self.transformation(*conf)
-            #except:
-            #    self.output.error(self, "Erreur inconnue")
-            #    return []
+            try:
+                conf,items = self.transformation(*conf)
+            except:
+                self.output.error(self, "Erreur inconnue")
+                return []
             for c in self.nextSteps:
                 if c != self.nextStep:
                     c.update(*conf)
@@ -122,6 +122,7 @@ class StepPainter(QWidget):
                 step.stateChanged.connect(self.update)
                 step.stateChanged.connect(lambda : self.pipeLineChanged.emit())
                 but.toggled.connect(step.setActive)
+                but.clicked.connect(lambda : step.stateChanged.emit())
                 for s in step.nextSteps:
                     for p in s.parent:
                         if not p.added:
@@ -650,7 +651,6 @@ class Main(*loadUiType("planification.ui")):
         self.updatePipeLine()
        
     def dragEnterEvent(self,de):
-        print(de.mimeData().formats())
         if de.mimeData().hasUrls():
             de.acceptProposedAction()
 
