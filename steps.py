@@ -130,6 +130,12 @@ def unificationTransformation(environment, *conf):
         return [p]
         
     for p in envi:
+        k = 1
+        while k != len(p):
+            if p[k-1]==p[k]:
+                p.pop(k)
+            else:
+                k += 1
         l = decoupe(p)
         o = [min(p,key=lambda e:e[0])[0] for p in l]
         c = min(enumerate(o),key=lambda e : e[1])[0]

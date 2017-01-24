@@ -77,12 +77,11 @@ class Step(QObject):
             self.setEnabled(True)
             if self.parent and not self.button.isChecked():
                 return []
-            try:
-                conf,items = self.transformation(*conf)
-            except:
-                #raise ############## TODO
-                self.output.error(self, "Erreur inconnue")
-                return []
+            #try:
+            conf,items = self.transformation(*conf)
+            #except:
+            #    self.output.error(self, "Erreur inconnue")
+            #    return []
             for c in self.nextSteps:
                 if c != self.nextStep:
                     c.update(*conf)
@@ -702,7 +701,6 @@ Janvier 2017
     def on_actionOuvrir_triggered(self):
         a = QFileDialog.getOpenFileName(self, "Ouvrir", self.enr, "Fichier de plannification (*.pln)")
         if len(a):
-            self.enr = a
             try:
                 f = open(a)
                 l = eval(f.readline()[:-1])
@@ -715,6 +713,7 @@ Janvier 2017
                 return
 
             self.on_actionNouveau_triggered()
+            self.enr = a
             e = [ptsToPoly(p,l) for p in e]
             o = ptsToPoly(o,l)
             for p in o:
