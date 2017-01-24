@@ -177,6 +177,7 @@ def cellDecompositionTransformation(environment, posi, posf, *conf):
     pts = [posi,posf]
     cps = []
     ind = []
+    it = []
     for i,p in enumerate(s):
         rvb = [int(o*255) for o in hsv_to_rgb((10*i%360)/360, 1,1)]
         #items.append((p, (0,100,0),(rvb[0], rvb[1], rvb[2],100)))
@@ -187,32 +188,39 @@ def cellDecompositionTransformation(environment, posi, posf, *conf):
         po = QPolygon([QPoint(*p) for p in p.trap])
         if po.containsPoint(QPoint(*posi),0):
             cps.append((pi,0))
-            items.append(((posi, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+            it.append(((posi, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
         if po.containsPoint(QPoint(*posf),0):
             cps.append((pi,1))
-            items.append(((posf, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+            it.append(((posf, p.bar),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
     
         p.nextSharedPos = {}
         for c in p.previousCells:
             pt = c.nextSharedPos[p]
             cps.append((pi,pt))
-            items.append(((p.bar,pts[pt]),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+            it.append(((p.bar,pts[pt]),(3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
         for c in p.nextCells:
             p.nextSharedPos[c] = len(pts)
             cps.append((pi,len(pts)))
             if p.rightHeight <= c.leftHeight:
                 pts.append((p.xMax, p.rightY))
-                items.append(((p.bar,(p.xMax, p.rightY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+                it.append(((p.bar,(p.xMax, p.rightY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
             else:
                 pts.append((p.xMax, c.leftY))
-                items.append(((p.bar,(p.xMax, c.leftY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
+                it.append(((p.bar,(p.xMax, c.leftY)), (3*rvb[0]//4, 3*rvb[1]//4, 3*rvb[2]//4),(0,0,0,0)))
     m = [[0]*len(pts) for _ in range(len(pts))]
     for i in cps:
         m[i[0]][i[1]]=1
         m[i[1]][i[0]]=1
-    return [pts,m],items
+    return [pts,m,it]+list(conf),items
 
 
+########### Graphe des cellules ############
+# 
+def cellGraphValidation(pts,m, it, *conf):
+    return ""
+
+def cellGraphTransformation(pts,m, it, *conf):
+    return [pts,m]+list(conf),it
 
 
 ########### Graphe de visibilité ############
@@ -265,6 +273,7 @@ def graphSimplificationTransformation(environment, mat, *conf):
                     mat[i][j] = 0
                     mat[j][i] = 0
     return [s,mat],items
+
 
 ########### Dijkstra ############
 #

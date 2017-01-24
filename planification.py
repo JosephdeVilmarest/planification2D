@@ -586,7 +586,10 @@ class Main(*loadUiType("planification.ui")):
                 cellDecompositionValidation,
                 cellDecompositionTransformation,
                 "Décomposition en\ntrapèzes", image="images/trap.png")
-        
+        b = Step(self, b,
+                 cellGraphValidation,
+                 cellGraphTransformation,
+                 "Graphe des cellules\nadjacentes")
         Step(self, [b,d],
              dijkstraValidation,
              dijkstraTransformation,
