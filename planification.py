@@ -77,7 +77,11 @@ class Step(QObject):
             self.setEnabled(True)
             if self.parent and not self.button.isChecked():
                 return []
-            conf,items = self.transformation(*conf)
+            try:
+                conf,items = self.transformation(*conf)
+            except:
+                self.output.error(self, "Erreur inconnue")
+                return []
             for c in self.nextSteps:
                 if c != self.nextStep:
                     c.update(*conf)

@@ -111,41 +111,45 @@ def unificationTransformation(environment, *conf):
         if not isDirect(po):
             po.reverse()
     nvEnvi = []
+    def decoupe(p):
+        b0=e0=-1
+        for k in range(1,len(p)-1):
+            j = p.index(p[k])
+            if j!=k:
+                if p[j-1]==p[k+1]:
+                    b0 = j
+                    e0 = k
+                    break
+                if p[j+1]==p[k-1]:
+                    b0 = j+1
+                    e0 = k-1
+                    break
+
+        if b0!=-1 and e0!=-1:
+            return decoupe(p[b0:e0])+decoupe(p[:b0]+p[e0+1:])
+        return [p]
+        
     for p in envi:
-        s = set(p)
-        if len(s) != len(p):
-            k = 1
-            while k < len(p):
-                if p[k-1]==p[k]:
-                    p.pop(k)
-                else:
-                    k+=1
-            print(p)
-            print(-(len(s) - len(p)))
-            k = 0
-            while not p[k] in p[:k]:
-                k += 1
-            l = p.index(p[k])
-            p0 = p[l:k]
-            p1 = p[:l]+p[k+1:]
-            if min(p0, key=lambda e:e[0])[0] > min(p1, key=lambda e:e[0])[0]:
-                if isDirect(p0):
-                    p0.reverse()
-                nvEnvi.append(p0)
-                p = p1
-            else:
-                if isDirect(p1):
-                    p1.reverse()
-                nvEnvi.append(p1)
-                p = p0
-        nvEnvi.append(p)
+        l = decoupe(p)
+        o = [min(p,key=lambda e:e[0])[0] for p in l]
+        c = min(enumerate(o),key=lambda e : e[1])[0]
+        print(o,c)
+        for i in range(len(l)):
+            if l[i][-1] == l[i][0]:
+                l[i] = l[i][:-1]
+            if i != c and isDirect(l[i]):
+                print(i,"renv")
+                l[i].reverse()
+            if l[i]:
+                nvEnvi.append(l[i])
+        for i in l : print(i)
             
     #envi = nvEnvi
     items = []
     for p in envi:
-        items.append((p, (140,140,140,0),(220,220,220,100)))
+        items.append((p, (100,10,100,0),(220,220,220,100)))
     for p in nvEnvi:
-        items.append((p, (140,140,140,250),(220,220,220,0)))
+        items.append((p, (100,100,100,250),(220,220,220,0)))
     
     return [nvEnvi]+list(conf),items
 
@@ -214,12 +218,14 @@ def visibilityGraphValidation(environment, posI, posF, *conf):
         return "Pas de point de départ/arrivée"
     pi = QPoint(*posI)
     pf = QPoint(*posF)
+    ni = 0
+    nf = 0
     for i in environment:
         p = QPolygon([QPoint(*p) for p in i])
-        if p.containsPoint(pi,0):
-            return "Position intiale en colision"
-        if p.containsPoint(pf,0):
-            return "Position finale en colision"
+        ni+= p.containsPoint(pi,0)
+        nf+= p.containsPoint(pf,0)
+    if ni%2:return "Position intiale en colision"
+    if nf%2:return "Position finale en colision"
     return ""
 
 def visibilityGraphTransformation(environment, posI, posF, *conf):
