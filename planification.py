@@ -611,8 +611,15 @@ class Main(*loadUiType("planification.ui")):
         def wheelEvent(view):
             def wheelEvent(we):
                 if we.modifiers() & Qt.ControlModifier:
+                    
+                    view.setTransformationAnchor(QGraphicsView.NoAnchor)
+                    view.setResizeAnchor(QGraphicsView.NoAnchor)
+                    oldPos = view.mapToScene(we.pos())
                     a = .9 if we.delta() < 0 else 1.1
                     view.scale(a,a)
+                    newPos = view.mapToScene(we.pos())
+                    delta = newPos - oldPos
+                    view.translate(delta.x(), delta.y())
                     we.accept()
                 else:
                     b = -we.delta()/4

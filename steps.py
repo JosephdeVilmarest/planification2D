@@ -130,6 +130,7 @@ def unificationTransformation(environment, *conf):
         return [p]
         
     for p in envi:
+        print(p)
         k = 1
         while k != len(p):
             if p[k-1]==p[k]:

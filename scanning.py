@@ -170,13 +170,23 @@ def scanning(lobstacles,LEN):
     assert len(segments)==2 # Ambitieux !
     c = Cell(LEN,segments[0], segments[-1]).realCell()
     if c : cells.append(c)
-    if envi[0][1][0] <= 0:
+    """if envi[0][1][0] <= 0:
         for c in cells[0].nextCells:
             c.previousCells.remove(cells[0])
         cells.pop(0)
     if envi[-1][1][0] >= LEN:
         for c in cells[-1].previousCells:
             c.nextCells.remove(cells[-1])
-        cells.pop()
+        cells.pop()"""
+    for c in cells:
+        if c.xMax == c.xMin:
+            for i in c.previousCells:
+                i.nextCells.extend(c.nextCells)
+                i.nextCells.remove(c)
+            for i in c.nextCells:
+                i.previousCells.extend(c.previousCells)
+                i.previousCells.remove(c)
+            c.nextCells = []
+            c.previousCells = []
     return cells
 
