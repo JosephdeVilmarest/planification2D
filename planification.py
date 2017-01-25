@@ -150,10 +150,14 @@ class StepPainter(QWidget):
                 pa.drawLine(step.button.pos() + QPoint(step.button.width()//2,step.button.height()//2),
                             nextStep.button.pos() + QPoint(step.button.width()//2,step.button.height()//2))
                 drawRelation(nextStep)
-        pa.begin(self)
+        pa.end()
+        e = False & pa.isActive()
+        if not e:
+            pa.begin(self)
         for i in self.initStep.nextSteps:
             drawRelation(i)
-        pa.end()
+        if not e:
+            pa.end()
         super().paintEvent(pe)
 
 
@@ -361,11 +365,12 @@ class PolyScene(QGraphicsScene):
         if self.directLine:
             self.removeItem(self.directLine)
         if self.currentController:
-            self.directLine = QGraphicsLineItem(QLineF(self.currentController.pos(),
+            self.directLine = self.addLine(QLineF(self.currentController.pos(),
                                                        self.currentController.next.pos()))
             self.directLine.setPen(QPen(QColor(0,0,255)))
             self.directLine.setZValue(+.5)
-            self.addItem(self.directLine)
+        else:
+            self.directLine = None
 
     def mousePressEvent(self, me):
         #print(self.itemAt(me.scenePos(), self.view.transform()))
@@ -441,7 +446,8 @@ class PolyScene(QGraphicsScene):
         self.polygons = []
         for i in self.controllers:
             self.removeItem(i)
-        self.removeItem(self.directLine)
+        if self.directLine:
+            self.removeItem(self.directLine)
         self.directLine = None
         self.currentController = None
         self.controllers = []
@@ -663,6 +669,8 @@ class Main(*loadUiType("planification.ui")):
     @pyqtSlot()
     def on_actionNouveau_triggered(self):
         self.enr = ""
+        self.hiddenStep.setActive(False)
+        self.hiddenStep.setActive(True)
         self.on_actionClearObject_triggered()
         self.on_actionClearEnvironment_triggered()
 

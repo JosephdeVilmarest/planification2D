@@ -246,7 +246,7 @@ def visibilityGraphTransformation(environment, posI, posF, *conf):
     for i in range(len(s)):
         for j in range(i):
             if m[i][j]:
-                items.append(((s[i],s[j]), (200,120,0,50),(0,0,0,0)))
+                items.append(((s[i],s[j]), (200,180,120,100),(0,0,0,0)))
     return [s,m],items
 
 
