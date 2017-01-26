@@ -247,27 +247,27 @@ def visibilityGraphTransformation(environment, posI, posF, *conf):
         for j in range(i):
             if m[i][j]:
                 items.append(((s[i],s[j]), (200,180,120,100),(0,0,0,0)))
-    return [s,m],items
+    return [s,m, environment],items
 
 
 
 ########### Simplification du graphe ############
 # Pas de point / segment seul + pas de superposition
-def graphSimplificationValidation(environment, mat, *conf):
+def graphSimplificationValidation(environment, mat, polys, *conf):
 
     return ""
 
-def graphSimplificationTransformation(environment, mat, *conf):
+def graphSimplificationTransformation(environment, mat, polys, *conf):
     s=environment
     items = []
-    pol = QPolygon(list(map(lambda x:QPoint(*x),s[2:])))
+    pols = [QPolygon(list(map(lambda x:QPoint(*x),p))) for p in polys]
     for i in range(len(s)):
         for j in range(i):
             if mat[i][j]:
                 s1 = 1.05*s[i][0]-0.05*s[j][0], 1.05*s[i][1]-0.05*s[j][1]
                 s2 = 1.05*s[j][0]-0.05*s[i][0], 1.05*s[j][1]-0.05*s[i][1]
-                if not (pol.containsPoint(QPoint(*s1), Qt.OddEvenFill) or 
-                        pol.containsPoint(QPoint(*s2), Qt.OddEvenFill)):
+                if not any((p.containsPoint(QPoint(*s1), Qt.OddEvenFill) or 
+                        p.containsPoint(QPoint(*s2), Qt.OddEvenFill)) for p in pols):
                     items.append(((s[i],s[j]), (255,0,0),(0,0,0,0)))
                 else:
                     mat[i][j] = 0
