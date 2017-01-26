@@ -597,7 +597,8 @@ class Main(*loadUiType("planification.ui")):
         b = Step(self, b,
                  cellGraphValidation,
                  cellGraphTransformation,
-                 "Graphe des cellules\nadjacentes")
+                 "Graphe des cellules\nadjacentes",
+                 image="images/graph.png")
         Step(self, [b,d],
              dijkstraValidation,
              dijkstraTransformation,

@@ -251,7 +251,7 @@ def visibilityGraphTransformation(environment, posI, posF, *conf):
 
 
 
-########### Graphe de visibilité ############
+########### Simplification du graphe ############
 # Pas de point / segment seul + pas de superposition
 def graphSimplificationValidation(environment, mat, *conf):
 
